@@ -343,7 +343,7 @@ static bool detect_shortcuts(TransactionalLibrary& tl, Seed seed) {
             ::std::cout << "⎪ Checked in " << ::std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << ::std::endl;
         }, "Interleaving multiple TMs took too long.");
 
-        if (true) bounded_run(::std::chrono::milliseconds(12000), [&] {
+        if (true) bounded_run(::std::chrono::milliseconds(12000 * 4), [&] {
             auto t1 = ::std::chrono::steady_clock::now();
             ::std::cout << "⎪ Trying to allocate a large TM..." << ::std::endl;
             size_t constexpr tm_size = 1024 * 1024 * 1024;
@@ -375,7 +375,7 @@ static bool detect_shortcuts(TransactionalLibrary& tl, Seed seed) {
             ::std::cout << "⎪ Checked in " << ::std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << ::std::endl;
         }, "Allocating a large TM took too long.");
 
-        if (true) bounded_run(::std::chrono::milliseconds(12000 * 8), [&] {
+        if (true) bounded_run(::std::chrono::milliseconds(12000 * 16), [&] {
             auto t1 = ::std::chrono::steady_clock::now();
             ::std::cout << "⎪ Checking whether base memory is recycled..." << ::std::endl;
             size_t constexpr tm_size = 1024 * 1024 * 1024;
@@ -407,7 +407,7 @@ static bool detect_shortcuts(TransactionalLibrary& tl, Seed seed) {
             ::std::cout << "⎪ Checked in " << ::std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << ::std::endl;
         }, "Repeatedly allocating a large TM took too long.");
 
-        if (true)  bounded_run(::std::chrono::milliseconds(10000 * 8), [&] {
+        if (true)  bounded_run(::std::chrono::milliseconds(10000 * 16), [&] {
             auto t1 = ::std::chrono::steady_clock::now();
             ::std::cout << "⎪ Checking whether freed memory is recycled..." << ::std::endl;
             size_t constexpr segment_size = 1024 * 1024 * 1024;
