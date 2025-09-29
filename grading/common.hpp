@@ -271,8 +271,13 @@ template<class Rep, class Period, class Func> static void bounded_run(::std::chr
     ::std::mutex lock;
     ::std::unique_lock<decltype(lock)> guard{lock};
     ::std::condition_variable cv;
+    ::std::exception_ptr eptr;
     ::std::thread runner{[&]() {
-        func();
+        try {
+            func();
+        } catch (...) {
+            eptr = std::current_exception(); // copies the exception on the heap
+        }
         { // Notify master
             ::std::unique_lock<decltype(lock)> guard{lock};
             cv.notify_all();
@@ -283,6 +288,8 @@ template<class Rep, class Period, class Func> static void bounded_run(::std::chr
         throw Exception::BoundedOverrun{emsg};
     }
     runner.join();
+    if (eptr)
+        ::std::rethrow_exception(eptr); // propagates the original exception
 }
 
 /** Spin barrier class.

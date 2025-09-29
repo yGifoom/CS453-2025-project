@@ -23,11 +23,18 @@
 
 // External headers
 #include <algorithm>
+#include <array>
 #include <atomic>
+#include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <deque>
+#include <exception>
 #include <iostream>
 #include <random>
 #include <variant>
+#include <vector>
 
 // Internal headers
 #include "common.hpp"
@@ -173,7 +180,7 @@ static auto measure(Workload& workload, unsigned int const nbthreads, unsigned i
 
                     // 3. Correctness check
                     if (!sync.worker_wait()) return;
-                    sync.worker_notify(workload.check(i, std::random_device{}())); // Random seed is wanted here
+                    sync.worker_notify(workload.check(i, ::std::random_device{}())); // Random seed is wanted here
 
                     // Synchronized quit
                     if (!sync.worker_wait()) return;
@@ -244,6 +251,205 @@ static auto measure(Workload& workload, unsigned int const nbthreads, unsigned i
         for (unsigned int i = 0; i < nbthreads; ++i) // Detach threads to avoid termination due to attached thread going out of scope
             threads[i].detach();
         throw;
+    }
+}
+
+namespace Exception {
+EXCEPTION(Shortcut, Any, "Shortcut found");
+    EXCEPTION(RwLargeSegment, Shortcut, "Incorrect RW in large segments");
+    EXCEPTION(MultiWordRw, Shortcut, "Incorrect multi-word RW");
+    EXCEPTION(MultiWordRo, Shortcut, "Incorrect multi-word RO");
+    EXCEPTION(MultiTmRw, Shortcut, "Incorrect RW with multiple TMs");
+    EXCEPTION(MultiTmRo, Shortcut, "Incorrect TO with multiple TMs");
+    EXCEPTION(WrongAlignment, Shortcut, "Incorrect alignment");
+}
+/** Measure the arithmetic mean of the execution time of the given workload with the given transaction library.
+ * @param tl     Transactional library to check
+ * @return Error constant null-terminated string ('nullptr' for none)
+**/
+static bool detect_shortcuts(TransactionalLibrary& tl, Seed seed) {
+    ::std::minstd_rand rng{seed};
+    ::std::uniform_int_distribution<uint8_t> byte_dist(0, 255);
+    try  {
+        if (true) bounded_run(::std::chrono::milliseconds(100), [&] {
+            auto t1 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Checking multi-word RW with various alignments..." << ::std::endl;
+            ::std::array<uint8_t, 256> reference, retrieved, retrieved_ro;
+            for (size_t const word_size : {8, 16, 32, 64, 128, 256}) {
+                TransactionalMemory tm{tl, word_size, 256};
+                if ((uintptr_t)tm.get_start() % word_size)
+                    throw Exception::WrongAlignment();
+                for (size_t words = 1; ((words << 1) * word_size) <= reference.size(); words <<= 1) {
+                    ::std::generate(reference.begin(), reference.end(), [&]{ return byte_dist(rng); });
+                    auto size = word_size * words;
+                    transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                        tx.write(reference.data(), size, tm.get_start());
+                    });
+                    transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                        tx.read(tm.get_start(), size, retrieved.data());
+                    });
+                    if (::std::memcmp(reference.data(), retrieved.data(), size))
+                        throw Exception::MultiWordRw();
+                    transactional(tm, Transaction::Mode::read_only, [&](auto& tx) {
+                        tx.read(tm.get_start(), size, retrieved_ro.data());
+                    });
+                    if (::std::memcmp(reference.data(), retrieved_ro.data(), size))
+                        throw Exception::MultiWordRo();
+                }
+            }
+            auto t2 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Checked in " << ::std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << ::std::endl;
+        }, "Reading/writing multiple words with different alignments took too long.");
+
+        if (true) bounded_run(::std::chrono::milliseconds(1000), [&] {
+            auto t1 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Checking whether multiple TMs can be used..." << ::std::endl;
+            size_t constexpr words = 32;
+            size_t constexpr word_size = sizeof(uint64_t);
+            size_t constexpr tm_count = 128;
+            ::std::uniform_int_distribution<int> word_dist(0, words - 1);
+            ::std::deque<TransactionalMemory> tms; // std::array is hard to initialize
+            for (size_t i = 0; i < tm_count; i++)
+                tms.emplace_back(tl, word_size, words * word_size);
+            ::std::array<::std::array<uint8_t, words * word_size>, tm_count> references, retrieved, retrieved_ro;
+            for (auto& ref : references)
+                ::std::generate(ref.begin(), ref.end(), [&]{ return byte_dist(rng); });
+            for (int i = 0; i < 16; i++) {
+                auto word = word_dist(rng);
+                auto offset = word * word_size;
+                for (size_t j = 0; j < tms.size(); j++) {
+                    transactional(tms[j], Transaction::Mode::read_write, [&](auto& tx) {
+                        tx.write(references[j].data() + offset, word_size, (uint8_t*)tms[j].get_start() + offset);
+                    });
+                }
+                for (size_t j = 0; j < tms.size(); j++) {
+                    transactional(tms[j], Transaction::Mode::read_write, [&](auto& tx) {
+                        tx.read((uint8_t*)tms[j].get_start() + offset, word_size, retrieved[j].data() + offset);
+                    });
+                }
+                for (size_t j = 0; j < tms.size(); j++)
+                    if (::std::memcmp(references[j].data() + offset, retrieved[j].data() + offset, word_size))
+                        throw Exception::MultiTmRw();
+                for (size_t j = 0; j < tms.size(); j++) {
+                    transactional(tms[j], Transaction::Mode::read_only, [&](auto& tx) {
+                        tx.read((uint8_t*)tms[j].get_start() + offset, word_size, retrieved_ro[j].data() + offset);
+                    });
+                }
+                for (size_t j = 0; j < tms.size(); j++)
+                    if (::std::memcmp(references[j].data() + offset, retrieved_ro[j].data() + offset, word_size))
+                        throw Exception::MultiTmRo();
+            }
+            auto t2 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Checked in " << ::std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << ::std::endl;
+        }, "Interleaving multiple TMs took too long.");
+
+        if (true) bounded_run(::std::chrono::milliseconds(12000), [&] {
+            auto t1 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Trying to allocate a large TM..." << ::std::endl;
+            size_t constexpr tm_size = 1024 * 1024 * 1024;
+            size_t constexpr word_size = sizeof(uint64_t);
+            size_t constexpr words = tm_size / word_size;
+            ::std::uniform_int_distribution<int> word_dist(0, words - 1);
+            ::std::array<uint8_t, word_size> reference, retrieved;
+            ::std::generate(reference.begin(), reference.end(), [&]{ return byte_dist(rng); });
+            TransactionalMemory tm{tl, word_size, tm_size};
+            ::std::cout << "⎪ Writing to all pages (multiple times)..." << ::std::endl;
+            transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                for (int i = 0; i < 8; i++)
+                    for (auto* p = (uint8_t*)tm.get_start(); p < (uint8_t*)tm.get_start() + tm_size; p += 4096)
+                        tx.write(reference.data(), word_size, p);
+            });
+            for (int i = 0; i < 16; i++) {
+                auto word = word_dist(rng);
+                auto offset = word * word_size;
+                transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                    tx.write(reference.data(), word_size, (uint8_t*)tm.get_start() + offset);
+                });
+                transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                    tx.read((uint8_t*)tm.get_start() + offset, word_size, retrieved.data());
+                });
+                if (reference != retrieved)
+                    throw Exception::RwLargeSegment();
+            }
+            auto t2 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Checked in " << ::std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << ::std::endl;
+        }, "Allocating a large TM took too long.");
+
+        if (true) bounded_run(::std::chrono::milliseconds(12000 * 8), [&] {
+            auto t1 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Checking whether base memory is recycled..." << ::std::endl;
+            size_t constexpr tm_size = 1024 * 1024 * 1024;
+            size_t constexpr word_size = sizeof(uint64_t);
+            size_t constexpr words = tm_size / word_size;
+            ::std::uniform_int_distribution<int> word_dist(0, words - 1);
+            ::std::array<uint8_t, word_size> reference, retrieved;
+            for (int r = 0; r < 8; r++) {
+                ::std::generate(reference.begin(), reference.end(), [&]{ return byte_dist(rng); });
+                TransactionalMemory tm{tl, word_size, tm_size};
+                transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                    for (auto* p = (uint8_t*)tm.get_start(); p < (uint8_t*)tm.get_start() + tm_size; p += 4096)
+                        tx.write(reference.data(), word_size, p);
+                });
+                for (int i = 0; i < 16; i++) {
+                    auto word = word_dist(rng);
+                    auto offset = word * word_size;
+                    transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                        tx.write(reference.data(), word_size, (uint8_t*)tm.get_start() + offset);
+                    });
+                    transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                        tx.read((uint8_t*)tm.get_start() + offset, word_size, retrieved.data());
+                    });
+                    if (reference != retrieved)
+                        throw Exception::RwLargeSegment();
+                }
+            }
+            auto t2 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Checked in " << ::std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << ::std::endl;
+        }, "Repeatedly allocating a large TM took too long.");
+
+        if (true)  bounded_run(::std::chrono::milliseconds(10000 * 8), [&] {
+            auto t1 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Checking whether freed memory is recycled..." << ::std::endl;
+            size_t constexpr segment_size = 1024 * 1024 * 1024;
+            size_t constexpr word_size = sizeof(uint64_t);
+            size_t constexpr words = segment_size / word_size;
+            ::std::uniform_int_distribution<int> word_dist(0, words - 1);
+            ::std::array<uint8_t, word_size> reference, retrieved;
+            TransactionalMemory tm{tl, word_size, word_size}; // Small base
+            for (int r = 0; r < 8; r++) {
+                ::std::generate(reference.begin(), reference.end(), [&]{ return byte_dist(rng); });
+                void* segment;
+                transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                    segment = tx.alloc(segment_size);
+                });
+                transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                for (auto* p = (uint8_t*)segment; p < (uint8_t*)segment + segment_size; p += 4096)
+                    tx.write(reference.data(), word_size, p);
+                });
+                for (int i = 0; i < 16; i++) {
+                    auto word = word_dist(rng);
+                    auto offset = word * word_size;
+                    transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                        tx.write(reference.data(), word_size, (uint8_t*)segment + offset);
+                    });
+                    transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                        tx.read((uint8_t*)segment + offset, word_size, retrieved.data());
+                    });
+                    if (reference != retrieved)
+                        throw Exception::RwLargeSegment();
+                }
+                transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                    tx.free(segment);
+                });
+            }
+            auto t2 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Checked in " << ::std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << ::std::endl;
+        }, "Repeatedly allocating a large segment took too long.");
+
+        return true;
+    } catch (::std::exception const& err) {
+        ::std::cerr << "⎪⎧ *** EXCEPTION ***" << ::std::endl << "⎪⎩ " << err.what() << ::std::endl;
+        return false;
     }
 }
 
@@ -338,6 +544,15 @@ int main(int argc, char** argv) {
                 }
                 ::std::cout << ::std::endl;
                 ::std::cout << "⎩ Average TX execution time: " << (perfdbl / pertxdiv) << " ns" << ::std::endl;
+                if (i == argc - 1) { // We run additional checks on the last implementation.
+                    ::std::cout << "⎧ Checking whether '" << argv[i] << "' took shortcuts..." << ::std::endl;
+                    auto ok = detect_shortcuts(tl, seed);
+                    if (unlikely(!ok)) {
+                        ::std::cout << "⎩ Shortcut detected" << ::std::endl;
+                        return 1;
+                    }
+                    ::std::cout << "⎩ No shortcuts detected" << ::std::endl;
+                }
             } catch (::std::exception const& err) { // Special case: cannot unload library with running threads, so print error and quick-exit
                 ::std::cerr << "⎪ *** EXCEPTION ***" << ::std::endl;
                 ::std::cerr << "⎩ " << err.what() << ::std::endl;
