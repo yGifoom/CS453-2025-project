@@ -257,10 +257,11 @@ static auto measure(Workload& workload, unsigned int const nbthreads, unsigned i
 namespace Exception {
 EXCEPTION(Shortcut, Any, "Shortcut found");
     EXCEPTION(RwLargeSegment, Shortcut, "Incorrect RW in large segments");
+    EXCEPTION(RwManySegments, Shortcut, "Incorrect RW with many segments");
     EXCEPTION(MultiWordRw, Shortcut, "Incorrect multi-word RW");
     EXCEPTION(MultiWordRo, Shortcut, "Incorrect multi-word RO");
     EXCEPTION(MultiTmRw, Shortcut, "Incorrect RW with multiple TMs");
-    EXCEPTION(MultiTmRo, Shortcut, "Incorrect TO with multiple TMs");
+    EXCEPTION(MultiTmRo, Shortcut, "Incorrect RO with multiple TMs");
     EXCEPTION(WrongAlignment, Shortcut, "Incorrect alignment");
 }
 /** Measure the arithmetic mean of the execution time of the given workload with the given transaction library.
@@ -342,6 +343,37 @@ static bool detect_shortcuts(TransactionalLibrary& tl, Seed seed) {
             auto t2 = ::std::chrono::steady_clock::now();
             ::std::cout << "⎪ Checked in " << ::std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << ::std::endl;
         }, "Interleaving multiple TMs took too long.");
+
+        if (true) bounded_run(::std::chrono::milliseconds(1024), [&] {
+            auto t1 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Trying to allocate many segments..." << ::std::endl;
+            size_t constexpr word_size = sizeof(uint64_t);
+            size_t constexpr segment_size = word_size;
+            size_t constexpr segment_count = 1024;
+            ::std::array<void*, segment_count> segments;
+            TransactionalMemory tm{tl, word_size, word_size};
+            for (uint64_t i = 0; i < segments.size(); i++) {
+                transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                    segments[i] = tx.alloc(segment_size);
+                    tx.write(&i, sizeof(i), segments[i]);
+                });
+            }
+            for (uint64_t i = 0; i < segments.size(); i++) {
+                uint64_t read;
+                transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                    tx.read(segments[i], sizeof(read), &read);
+                });
+                if (read != i)
+                    throw Exception::RwManySegments();
+            }
+            for (uint64_t i = 0; i < segments.size(); i++) {
+                transactional(tm, Transaction::Mode::read_write, [&](auto& tx) {
+                    tx.free(segments[i]);
+                });
+            }
+            auto t2 = ::std::chrono::steady_clock::now();
+            ::std::cout << "⎪ Checked in " << ::std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << " ms" << ::std::endl;
+        }, "Allocating/RWing/freeing many segments took too long.");
 
         if (true) bounded_run(::std::chrono::milliseconds(12000 * 4), [&] {
             auto t1 = ::std::chrono::steady_clock::now();
