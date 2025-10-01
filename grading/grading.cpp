@@ -264,11 +264,11 @@ EXCEPTION(Shortcut, Any, "Shortcut found");
     EXCEPTION(MultiTmRo, Shortcut, "Incorrect RO with multiple TMs");
     EXCEPTION(WrongAlignment, Shortcut, "Incorrect alignment");
 }
-/** Measure the arithmetic mean of the execution time of the given workload with the given transaction library.
+/** Check whether the students took shortcuts in their implementations.
  * @param tl     Transactional library to check
- * @return Error constant null-terminated string ('nullptr' for none)
+ * @return True if no shortctus were found, false otherwise.
 **/
-static bool detect_shortcuts(TransactionalLibrary& tl, Seed seed) {
+static bool check_shortcuts(TransactionalLibrary& tl, Seed seed) {
     ::std::minstd_rand rng{seed};
     ::std::uniform_int_distribution<uint8_t> byte_dist(0, 255);
     try  {
@@ -578,7 +578,7 @@ int main(int argc, char** argv) {
                 ::std::cout << "⎩ Average TX execution time: " << (perfdbl / pertxdiv) << " ns" << ::std::endl;
                 if (i == argc - 1) { // We run additional checks on the last implementation.
                     ::std::cout << "⎧ Checking whether '" << argv[i] << "' took shortcuts..." << ::std::endl;
-                    auto ok = detect_shortcuts(tl, seed);
+                    auto ok = check_shortcuts(tl, seed);
                     if (unlikely(!ok)) {
                         ::std::cout << "⎩ Shortcut detected" << ::std::endl;
                         return 1;
