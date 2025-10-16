@@ -2,8 +2,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-#include "parser.h"
-#include "hello.h"
+#include "../include_tests/test_logger.h"
 
 static void stop(int sig) {
     signal(SIGTERM, SIG_DFL);
@@ -31,7 +30,6 @@ int main(int argc, char** argv) {
         return 1;
     }
     
-    hello();
     printf("\n");
     
     printf("My PID: %d\n", getpid());
@@ -66,7 +64,12 @@ int main(int argc, char** argv) {
     printf("Doing some initialization...\n\n");
     printf("Broadcasting and delivering messages...\n\n");
 
+    char* res = malloc(sizeof(char) * 4);
+    testLogger(res, parser);
+    printf("Test Logger: %s\n", res);
+    free(res);
     
     parser_destroy(parser);
+
     return 0;
 }

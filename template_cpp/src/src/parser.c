@@ -1,19 +1,10 @@
 #include "parser.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <ctype.h>
-
-static char* my_strdup(const char* s) {
-    if (!s) return NULL;
-    size_t len = strlen(s) + 1;
-    char* dup = (char*)malloc(len);
-    if (dup) {
-        memcpy(dup, s, len);
-    }
-    return dup;
-}
 
 static int is_positive_number(const char* str) {
     if (!str || *str == '\0') return 0;

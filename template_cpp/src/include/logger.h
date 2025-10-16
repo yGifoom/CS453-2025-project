@@ -4,23 +4,24 @@
 
 typedef struct{
     char** messages;
-    size_t count;
-    size_t capacity;
+    size_t count; // in bytes
+    size_t capacity; // in bytes
     FILE* outputFile;
-    bool debug;
-} logger;
+    int debug;
+} Logger;
 
-int addLog(char* log);
 // add an entry of a log to the internal state of logger
 // called by pflx.deliver
+int logger_add(Logger* l, char* log);
 
-int dump();
 // write internal state of logger onto logger->outputFile, clear internal state
 // called periodically
 // can be called asynchronously by signal interrupt
+int logger_flush();
 
-logger* init_logger(FILE* outputfile, bool debug);
 // constructor of logger
+// debug == 1 means debugger active, otherwise inactive
+Logger* logger_init(const char* outputfile, int debug);
 
-int destroy_logger(logger* l);
 // destroy logger
+int logger_destroy(Logger* l);
