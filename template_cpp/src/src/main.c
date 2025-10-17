@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
-#include "../include_tests/test_logger.h"
+#include "../include_tests/tests.h"
 
 static void stop(int sig) {
     signal(SIGTERM, SIG_DFL);
@@ -68,6 +68,16 @@ int main(int argc, char** argv) {
     testLogger(res, parser);
     printf("Test Logger: %s\n", res);
     free(res);
+    
+    char* udp_res = malloc(sizeof(char) * 50);
+    testUdp(udp_res, parser);
+    printf("Test UDP: %s\n", udp_res);
+    free(udp_res);
+    
+    char* pflx_res = malloc(sizeof(char) * 50);
+    testPflx(pflx_res, parser);
+    printf("Test Pflx: %s\n", pflx_res);
+    free(pflx_res);
     
     parser_destroy(parser);
 

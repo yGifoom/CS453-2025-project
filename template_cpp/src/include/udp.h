@@ -1,3 +1,5 @@
+#ifndef UDP_H
+#define UDP_H
 
 #include <arpa/inet.h>
 #include <time.h>
@@ -5,19 +7,21 @@
 
 typedef struct{
     int sockfd;
-    sockaddr_in addr;
+    struct sockaddr_in addr;
 }UDP;
 
-int recvUdp(UDP *udp, void *buffer, size_t bufferSize);
-// recieve with udp  
-// upcalles pflx.recvPflx
-
-int sendUdp(UDP *udp, sockaddr_in addr, int port, const void *message);
 // send with udp
-// downcalled by pflx.sendPflx
+// downcalled by pflx.pflx_send
+int udp_send(UDP *udp, const char* ip, short unsigned port, const void *message);
 
-UDP* init_udp(int port);
+// recieve with udp  
+// upcalles pflx.pflx_recv
+ssize_t udp_recv(UDP *udp, void* buffer, size_t bufferSize);
+
 // construct udp socket
+UDP* udp_init(short unsigned port);
 
-int destroy_udp(UDP* udp);
 // destroy udp socket
+int udp_destroy(UDP* udp);
+
+#endif // UDP_H

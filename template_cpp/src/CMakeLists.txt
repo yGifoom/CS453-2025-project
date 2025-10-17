@@ -5,8 +5,10 @@ include_directories(include include_tests)
 set(SOURCES 
     src/main.c
     src/parser.c
+    src/udp.c
+    src/pflx.c
     src/logger.c
-    src/test_logger.c
+    src/tests.c
     src/utils.c
 )
 # DO NOT EDIT THE FOLLOWING LINES

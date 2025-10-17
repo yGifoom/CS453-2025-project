@@ -1,24 +1,32 @@
+#ifndef PFLX_H
+#define PFLX_H
 
-#include<udp.h>
+#include"udp.h"
+#include"parser.h"
 
-typedef struct{
+typedef struct {
     UDP* udpSocket;
-}pflx;
 
-int sendPflx(pflx* pflx, void* buffer, size_t processId);
+    const Host* phonebook;
+    size_t* expectedMsg;
+    size_t phonebook_size;
+} pflx;
+
 // send with perfect link properties
-// downcalled from node
+// will return on timeout or recv of ack
+// downcalled from nodeloop
+int pflx_send(pflx* pflx, void* buffer, size_t processId);
 
-int deliver(pflx* pflx, void* buffer, size_t buffSize, size_t processId);
-// deliver a message
-// called by recv
-
-int recvPflx(pflx* pflx, void* buffer, size_t buffSize); 
 // recieve a message following the perfect link properties
+// returns pointr of what is to be delivered, 
+// if not to be delivered returns null pointer
 // upcalled by udp
+char* pflx_recv(pflx* pflx, void* buffer, size_t buffSize); 
 
-pflx* init_pflx(UDP* udpSocket);
 // construct perfect link
+pflx* pflx_init(UDP* udpSocket, const Host* phonebook, size_t phonebook_size);
 
-int destroy_pflx(pflx* udp);
 // destroy perfect link
+int pflx_destroy(pflx* udp);
+
+#endif // PFLX_H
