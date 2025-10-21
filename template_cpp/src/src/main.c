@@ -1,23 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <unistd.h>
 #include "../include_tests/tests.h"
 
-static void stop(int sig) {
-    signal(SIGTERM, SIG_DFL);
-    signal(SIGINT, SIG_DFL);
-    
-    printf("Immediately stopping network packet processing.\n");
-    printf("Writing output.\n");
-    
-    exit(0);
-}
-
 int main(int argc, char** argv) {
-    signal(SIGTERM, stop);
-    signal(SIGINT, stop);
-    
+
     Parser* parser = parser_create(argc, argv);
     if (!parser) {
         fprintf(stderr, "Failed to create parser\n");
@@ -64,11 +51,12 @@ int main(int argc, char** argv) {
     printf("Doing some initialization...\n\n");
     printf("Broadcasting and delivering messages...\n\n");
 
+    /*
     char* res = malloc(sizeof(char) * 4);
     testLogger(res, parser);
     printf("Test Logger: %s\n", res);
     free(res);
-    
+
     char* udp_res = malloc(sizeof(char) * 50);
     testUdp(udp_res, parser);
     printf("Test UDP: %s\n", udp_res);
@@ -78,8 +66,16 @@ int main(int argc, char** argv) {
     testPflx(pflx_res, parser);
     printf("Test Pflx: %s\n", pflx_res);
     free(pflx_res);
+    */
+
+    char* node_res = malloc(sizeof(char) * 50);
+    testNodeSeq(node_res, parser);
+    printf("Test NodeSeq: %s\n", node_res);
+    free(node_res);
     
     parser_destroy(parser);
+
+    printf("main has finished\n");
 
     return 0;
 }
