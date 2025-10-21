@@ -16,7 +16,8 @@ int udp_send(UDP *udp, const char* ip, short unsigned port, const void *message)
 
 // recieve with udp  
 // upcalles pflx.pflx_recv
-ssize_t udp_recv(UDP *udp, void* buffer, size_t bufferSize);
+ssize_t udp_recv(UDP *udp, void* buffer, size_t buffer_size);
+ssize_t udp_recv_timeout(UDP *udp, void* buffer, size_t buffer_size, int timeout_ms);
 
 // construct udp socket
 UDP* udp_init(short unsigned port);
