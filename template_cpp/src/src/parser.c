@@ -110,6 +110,8 @@ Parser* parser_create(int argc, char** argv) {
     parser->hosts_count = 0;
     parser->output_path = NULL;
     parser->config_path = NULL;
+    parser->num_messages = 0;
+    parser->num_nodes = 0;
     
     return parser;
 }
@@ -151,6 +153,17 @@ int parser_parse(Parser* parser) {
     if (parser->argc >= 8) {
         parser->config_path = my_strdup(parser->argv[7]);
         if (!parser->config_path) return -1;
+        
+        // Parse config file
+        FILE* config = fopen(parser->config_path, "r");
+        if (config) {
+            if (fscanf(config, "%zu %zu", &parser->num_messages, &parser->num_nodes) != 2) {
+                fprintf(stderr, "Invalid config file format\n");
+                fclose(config);
+                return -1;
+            }
+            fclose(config);
+        }
     }
     
     // Parse hosts file
@@ -177,6 +190,10 @@ const char* parser_get_output_path(const Parser* parser) {
 
 const char* parser_get_config_path(const Parser* parser) {
     return parser ? parser->config_path : NULL;
+}
+
+size_t parser_get_num_messages(const Parser* parser) {
+    return parser ? parser->num_messages : 0;
 }
 
 void parser_destroy(Parser* parser) {

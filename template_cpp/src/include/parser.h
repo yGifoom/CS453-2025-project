@@ -23,6 +23,8 @@ typedef struct Parser {
     size_t hosts_count;
     char* output_path;
     char* config_path;
+    size_t num_messages;
+    size_t num_nodes;
 } Parser;
 
 // Initialize parser with command line arguments
@@ -36,6 +38,7 @@ uint32_t parser_get_id(const Parser* parser);
 const Host* parser_get_hosts(const Parser* parser, size_t* count);
 const char* parser_get_output_path(const Parser* parser);
 const char* parser_get_config_path(const Parser* parser);
+size_t parser_get_num_messages(const Parser* parser);
 
 // Cleanup
 void parser_destroy(Parser* parser);
