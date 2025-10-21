@@ -7,20 +7,20 @@
 
 typedef struct{
     size_t processId;
-    size_t CurrentMessageId;
-
+    size_t nextMessageId;
+    size_t nOfMessages;
     pflx* socket;
 
     Logger* logger;
 }Node;
 
 // main loop of a node
-int nodeLoop(Node* n);
+int node_loop(Node* node);
 
 // construct node
-Node* init_node(size_t id);
+Node* node_init(size_t id, size_t numOfMessages, const Host* phonebook, size_t phonebook_size, const char* logfile);
 
 // desctructor node
-int destroy_node(Node* n);
+int node_destroy(Node* node);
 
 #endif

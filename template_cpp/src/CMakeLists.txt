@@ -10,6 +10,7 @@ set(SOURCES
     src/logger.c
     src/tests.c
     src/utils.c
+    src/node.c
 )
 # DO NOT EDIT THE FOLLOWING LINES
 find_package(Threads)
