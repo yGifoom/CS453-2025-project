@@ -1,3 +1,5 @@
+#ifndef LOGGER_H
+#define LOGGER_H
 
 #include<stddef.h>
 #include<stdio.h>
@@ -25,3 +27,5 @@ Logger* logger_init(const char* outputfile, int debug);
 
 // destroy logger
 int logger_destroy(Logger* l);
+
+#endif

@@ -39,6 +39,7 @@ Logger* logger_init(const char* outputFile, int debug) {
         perror("fopen");
         exit(EXIT_FAILURE);
     }
+    l->debug=debug;
 
     return l;
 }
