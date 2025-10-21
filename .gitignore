@@ -88,3 +88,4 @@ dkms.conf
 
 # outs
 example/output/*
+example/hosts
