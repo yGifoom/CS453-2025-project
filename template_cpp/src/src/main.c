@@ -65,13 +65,19 @@ int main(int argc, char** argv) {
     char* pflx_res = malloc(sizeof(char) * 50);
     testPflx(pflx_res, parser);
     printf("Test Pflx: %s\n", pflx_res);
-    free(pflx_res);
-    */
-
+    free(pflx_res);*/
+    
+    char* queue_res = malloc(sizeof(char) * 50);
+    testNodeSeq(queue_res, parser);
+    printf("Test Queue: %s\n", queue_res);
+    free(queue_res);
+    
+    /*
     char* node_res = malloc(sizeof(char) * 50);
     testNodeSeq(node_res, parser);
     printf("Test NodeSeq: %s\n", node_res);
     free(node_res);
+    */
     
     parser_destroy(parser);
 

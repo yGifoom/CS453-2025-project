@@ -6,6 +6,7 @@
 void testLogger(char* res, Parser* parser);
 void testUdp(char* res, Parser* parser);
 void testPflx(char* res, Parser* parser);
+void testQueue(char* res, Parser* parser);
 void testNodeSeq(char* res, Parser* parser);
 
 #endif // TESTS_H

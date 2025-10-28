@@ -6,6 +6,7 @@ set(SOURCES
     src/main.c
     src/parser.c
     src/udp.c
+    src/queue.c
     src/pflx.c
     src/logger.c
     src/tests.c

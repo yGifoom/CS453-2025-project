@@ -5,6 +5,7 @@
 #include"tests.h"
 #include"node.h"
 #include"utils.h"
+#include"queue.h"
 #include<stdlib.h>
 #include<pthread.h>
 #include<string.h>
@@ -371,5 +372,171 @@ void testNodeSeq(char* res, Parser* parser) {
     fclose(node_file);
     remove(node_log);
 
+    strcpy(res, "pass");
+}
+typedef struct {
+    queue_t *q;
+    unsigned int max_items;
+} thread_data_t;
+
+void* popper_thread(void* arg);
+void* pusher_thread(void* arg);
+
+void* pusher_thread(void* arg) {
+    thread_data_t* td = (thread_data_t*)arg;
+    
+    for (unsigned int i = 1; i <= td->max_items; i++) {
+        unsigned int* value = malloc(sizeof(int));
+        *value = i;
+        queue_push(td->q, value, sizeof(int));
+    }
+    
+    return NULL;
+}
+
+void* popper_thread(void* arg) {
+    thread_data_t* td = (thread_data_t*)arg;
+    int* results = malloc(td->max_items * sizeof(int));
+    
+    for (unsigned int i = 0; i < td->max_items; i++) {
+        void* data;
+        size_t dataSize;
+        queue_pop(td->q, &data, &dataSize);
+        results[i] = *(int*)data;
+        free(data);
+    }
+    
+    return results;
+}
+
+void testQueue(char* res, Parser* parser) {
+    // Test 1: Sequential operations
+    queue_t* q = queue_init();
+    if (q == NULL) {
+        strcpy(res, "fail - queue init");
+        return;
+    }
+    
+    // Test empty queue size
+    if (queue_size(q) != 0) {
+        strcpy(res, "fail - initial size not 0");
+        queue_destroy(q);
+        return;
+    }
+    
+    // Test push and size
+    int* val1 = malloc(sizeof(int));
+    int* val2 = malloc(sizeof(int));
+    int* val3 = malloc(sizeof(int));
+    *val1 = 10;
+    *val2 = 20;
+    *val3 = 30;
+    
+    queue_push(q, val1, sizeof(int));
+    if (queue_size(q) != 1) {
+        strcpy(res, "fail - size after 1 push");
+        queue_destroy(q);
+        return;
+    }
+    
+    queue_push(q, val2, sizeof(int));
+    queue_push(q, val3, sizeof(int));
+    if (queue_size(q) != 3) {
+        strcpy(res, "fail - size after 3 pushes");
+        queue_destroy(q);
+        return;
+    }
+    
+    // Test FIFO order (push at head, pop from tail)
+    void* data;
+    size_t dataSize;
+    
+    queue_pop(q, &data, &dataSize);
+    if (*(int*)data != 10) {
+        strcpy(res, "fail - wrong FIFO order (first)");
+        free(data);
+        queue_destroy(q);
+        return;
+    }
+    free(data);
+    
+    queue_pop(q, &data, &dataSize);
+    if (*(int*)data != 20) {
+        strcpy(res, "fail - wrong FIFO order (second)");
+        free(data);
+        queue_destroy(q);
+        return;
+    }
+    free(data);
+    
+    queue_pop(q, &data, &dataSize);
+    if (*(int*)data != 30) {
+        strcpy(res, "fail - wrong FIFO order (third)");
+        free(data);
+        queue_destroy(q);
+        return;
+    }
+    free(data);
+    
+    if (queue_size(q) != 0) {
+        strcpy(res, "fail - size after pops not 0");
+        queue_destroy(q);
+        return;
+    }
+    
+    queue_destroy(q);
+    
+    // Test 2: Concurrent operations
+    q = queue_init();
+    if (q == NULL) {
+        strcpy(res, "fail - queue init for concurrent test");
+        return;
+    }
+    
+    const int NUM_ITEMS = 10;
+    thread_data_t td = {q, NUM_ITEMS};
+    
+    pthread_t pusher, popper;
+    
+    // Start both threads
+    if (pthread_create(&popper, NULL, popper_thread, &td) != 0) {
+        strcpy(res, "fail - create popper thread");
+        queue_destroy(q);
+        return;
+    }
+    
+    if (pthread_create(&pusher, NULL, pusher_thread, &td) != 0) {
+        strcpy(res, "fail - create pusher thread");
+        queue_destroy(q);
+        return;
+    }
+    
+    // Wait for both threads
+    pthread_join(pusher, NULL);
+    
+    void* popper_result;
+    pthread_join(popper, &popper_result);
+    
+    // Verify results
+    unsigned int* results = (unsigned int*)popper_result;
+    for (unsigned int i = 0; i < NUM_ITEMS; i++) {
+        if (results[i] != i + 1) {
+            strcpy(res, "fail - concurrent order/duplication");
+            free(results);
+            queue_destroy(q);
+            return;
+        }
+    }
+    
+    free(results);
+    
+    // Queue should be empty
+    if (queue_size(q) != 0) {
+        strcpy(res, "fail - queue not empty after concurrent test");
+        queue_destroy(q);
+        return;
+    }
+    
+    queue_destroy(q);
     strcpy(res, "pass");
 }
