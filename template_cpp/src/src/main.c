@@ -68,9 +68,14 @@ int main(int argc, char** argv) {
     free(pflx_res);*/
     
     char* queue_res = malloc(sizeof(char) * 50);
-    testNodeSeq(queue_res, parser);
+    testQueue(queue_res, parser);
     printf("Test Queue: %s\n", queue_res);
     free(queue_res);
+    
+    char* bst_res = malloc(sizeof(char) * 50);
+    testBstSet(bst_res, parser);
+    printf("Test BST Set: %s\n", bst_res);
+    free(bst_res);
     
     /*
     char* node_res = malloc(sizeof(char) * 50);
