@@ -74,14 +74,15 @@ int node_loop(Node *node) {
                 logger_add(node->logger, "Receiver waiting for message...");
                 logger_flush(node->logger);
             }
-            res = pflx_recv(node->socket, buffer, BUFFER_SIZE);
-            if(DEBUG == 1 && res != NULL){
-                snprintf(logBuffer, sizeof(logBuffer), "recieved: %s", res);
+            pflx_recv(node->socket, buffer, BUFFER_SIZE);
+
+            if(DEBUG == 1 && buffer != NULL){
+                snprintf(logBuffer, sizeof(logBuffer), "recieved: %s", (char* )buffer);
                 logger_add(node->logger, logBuffer);
                 logger_flush(node->logger);
             }
-            if(res != NULL){
-                snprintf(logBuffer, sizeof(logBuffer), "d %s", res);
+            if(buffer != NULL){
+                snprintf(logBuffer, sizeof(logBuffer), "d %s", (char* )buffer);
                 logger_add(node->logger, logBuffer);
                 maxExpectedMess--;
             }
@@ -101,7 +102,7 @@ int node_loop(Node *node) {
                 logger_flush(node->logger);
             }
             // Send to receiver using 1-based process ID (pflx_send handles conversion)
-            lenMessage = pflx_send(node->socket, buffer, recvId);
+            lenMessage = pflx_send(node->socket, buffer, BUFFER_SIZE, recvId);
             if(lenMessage < 0){
                 if(DEBUG == 1){
                     snprintf(logBuffer, sizeof(logBuffer), "error in pflxSend! returned %d", lenMessage);
