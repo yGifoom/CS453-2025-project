@@ -36,4 +36,10 @@ int bst_set_lookup(bst_set* set, size_t key);
 // Destroy the set and free all memory
 void bst_set_destroy(bst_set* set);
 
+// Compact consecutive keys starting from (*lastCon + 1):
+// Repeatedly removes the minimum node if it equals (*lastCon + 1),
+// increments the accumulator, and updates *lastCon accordingly.
+// Returns the number of removed nodes, or -1 on error (e.g., NULL args).
+size_t bst_set_compact_consequent(bst_set* set, size_t lastCon);
+
 #endif // BST_SET_H

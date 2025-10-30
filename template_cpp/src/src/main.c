@@ -61,11 +61,12 @@ int main(int argc, char** argv) {
     testUdp(udp_res, parser);
     printf("Test UDP: %s\n", udp_res);
     free(udp_res);
+    */
     
     char* pflx_res = malloc(sizeof(char) * 50);
     testPflx(pflx_res, parser);
     printf("Test Pflx: %s\n", pflx_res);
-    free(pflx_res);*/
+    free(pflx_res);/*
     
     char* queue_res = malloc(sizeof(char) * 50);
     testQueue(queue_res, parser);
@@ -77,7 +78,7 @@ int main(int argc, char** argv) {
     printf("Test BST Set: %s\n", bst_res);
     free(bst_res);
     
-    /*
+    
     char* node_res = malloc(sizeof(char) * 50);
     testNodeSeq(node_res, parser);
     printf("Test NodeSeq: %s\n", node_res);

@@ -249,6 +249,45 @@ int bst_set_lookup(bst_set* set, size_t key) {
     return result;
 }
 
+size_t bst_set_compact_consequent(bst_set* set, size_t lastCon) {
+    if (!set) return 0;
+
+    pthread_mutex_lock(&set->mutex);
+
+    size_t removed = 0;
+
+    while (set->root) {
+        // Avoid overflow on (*lastCon + 1)
+        size_t next = lastCon + 1;
+        if (next <= lastCon) {
+            // Overflow detected; cannot progress further.
+            break;
+        }
+
+        bst_node* min_node = find_min(set->root);
+        if (!min_node) break;
+
+        if (min_node->key == next) {
+            int status = 0;
+            set->root = delete_helper(set->root, min_node->key, &status);
+            if (status == 0) {
+                set->size--;
+                removed++;
+                lastCon = next;
+            } else {
+                // Unexpected: min not found; stop to avoid infinite loop
+                break;
+            }
+        } else {
+            // Minimum key is not the next consecutive value; stop
+            break;
+        }
+    }
+
+    pthread_mutex_unlock(&set->mutex);
+    return removed;
+}
+
 void bst_set_destroy(bst_set* set) {
     if (!set) return;
     

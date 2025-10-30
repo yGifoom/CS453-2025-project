@@ -10,6 +10,7 @@
 #include<stdlib.h>
 #include<pthread.h>
 #include<string.h>
+#include <time.h>
 
 // test for correctness of logger
 void testLogger(char* res, Parser* parser){
@@ -167,7 +168,191 @@ void testUdp(char* res, Parser* parser){
 }
 
 void testPflx(char* res, Parser* parser){
-    strcpy(res, "not implemented");
+    // Get host information from parser
+    size_t hosts_count;
+    const Host* hosts = parser_get_hosts(parser, &hosts_count);
+    
+    if (hosts_count < 2) {
+        strcpy(res, "fail - need at least 2 hosts");
+        return;
+    }
+    
+    const size_t NUM_MESSAGES = parser_get_num_messages(parser);
+    if (NUM_MESSAGES == 0 || NUM_MESSAGES > 1000) {
+        strcpy(res, "fail - invalid message count");
+        return;
+    }
+    
+    // Initialize two pflx instances
+    short unsigned int port_sender = ntohs(hosts[0].port);
+    short unsigned int port_receiver = ntohs(hosts[1].port);
+    
+    pflx* sender = pflx_init(port_sender, hosts, hosts_count);
+    pflx* receiver = pflx_init(port_receiver, hosts, hosts_count);
+    
+    if (!sender || !receiver) {
+        strcpy(res, "fail - pflx init");
+        if (sender) pflx_destroy(sender);
+        if (receiver) pflx_destroy(receiver);
+        return;
+    }
+    
+    // Start both pflx instances
+    if (pflx_start(sender) != 0 || pflx_start(receiver) != 0) {
+        strcpy(res, "fail - pflx start");
+        pflx_destroy(sender);
+        pflx_destroy(receiver);
+        return;
+    }
+    
+    // Track sent and delivered messages
+    bst_set* sent_messages = bst_set_init();
+    bst_set* delivered_messages = bst_set_init();
+    
+    // Send messages from sender to receiver
+    size_t sender_id = 1; // hosts[0]
+    size_t receiver_id = 2; // hosts[1]
+    
+    for (size_t i = 1; i <= NUM_MESSAGES; i++) {
+        char message[64];
+        snprintf(message, sizeof(message), "msg_%zu", i);
+        
+        if (pflx_send(sender, message, strlen(message) + 1, sender_id, receiver_id) != 0) {
+            strcpy(res, "fail - pflx send");
+            bst_set_destroy(sent_messages);
+            bst_set_destroy(delivered_messages);
+            pflx_stop(sender);
+            pflx_stop(receiver);
+            pflx_destroy(sender);
+            pflx_destroy(receiver);
+            return;
+        }
+        
+        bst_set_add(sent_messages, i);
+    }
+    
+    // Wait for all messages to be delivered
+    size_t max_wait_iterations = NUM_MESSAGES * 100;
+    size_t wait_count = 0;
+    
+    while (wait_count < max_wait_iterations) {
+        pflx_message* msg = NULL;
+        void* buffer = malloc(sizeof(pflx_message*));
+        
+        if (pflx_recv(receiver, buffer, sizeof(pflx_message*)) == 0) {
+            memcpy(&msg, buffer, sizeof(pflx_message*));
+            free(buffer);
+            
+            if (msg) {
+                // Check for duplicate delivery
+                if (bst_set_lookup(delivered_messages, msg->messageID) == 1) {
+                    strcpy(res, "fail - duplicate message delivered");
+                    pflx_message_destroy(msg);
+                    bst_set_destroy(sent_messages);
+                    bst_set_destroy(delivered_messages);
+                    pflx_stop(sender);
+                    pflx_stop(receiver);
+                    pflx_destroy(sender);
+                    pflx_destroy(receiver);
+                    return;
+                }
+                
+                // Check if message was actually sent
+                if (bst_set_lookup(sent_messages, msg->messageID) == 0) {
+                    strcpy(res, "fail - delivered message was never sent");
+                    pflx_message_destroy(msg);
+                    bst_set_destroy(sent_messages);
+                    bst_set_destroy(delivered_messages);
+                    pflx_stop(sender);
+                    pflx_stop(receiver);
+                    pflx_destroy(sender);
+                    pflx_destroy(receiver);
+                    return;
+                }
+                
+                bst_set_add(delivered_messages, msg->messageID);
+                pflx_message_destroy(msg);
+                
+                // Check if all messages delivered
+                if (delivered_messages->size == NUM_MESSAGES) {
+                    break;
+                }
+            }
+        } else {
+            free(buffer);
+        }
+        
+        wait_count++;
+        struct timespec ts_1ms = { .tv_sec = 0, .tv_nsec = 1000000 }; // 1ms
+        nanosleep(&ts_1ms, NULL);
+    }
+    
+    // Verify all sent messages were delivered
+    if (delivered_messages->size != NUM_MESSAGES) {
+        strcpy(res, "fail - not all messages delivered");
+        bst_set_destroy(sent_messages);
+        bst_set_destroy(delivered_messages);
+        pflx_stop(sender);
+        pflx_stop(receiver);
+        pflx_destroy(sender);
+        pflx_destroy(receiver);
+        return;
+    }
+    
+    // Verify each sent message was delivered
+    for (size_t i = 1; i <= NUM_MESSAGES; i++) {
+        if (bst_set_lookup(delivered_messages, i) == 0) {
+            strcpy(res, "fail - sent message not delivered");
+            bst_set_destroy(sent_messages);
+            bst_set_destroy(delivered_messages);
+            pflx_stop(sender);
+            pflx_stop(receiver);
+            pflx_destroy(sender);
+            pflx_destroy(receiver);
+            return;
+        }
+    }
+    
+    // Give some time for ACKs to settle
+    {
+        struct timespec ts_100ms = { .tv_sec = 0, .tv_nsec = 100000000 }; // 100ms
+        nanosleep(&ts_100ms, NULL);
+    }
+    
+    // Verify nonConsequentAcks is empty for both sender and receiver
+    for (size_t i = 0; i < hosts_count; i++) {
+        if (sender->nonConsequentAcks[i]->size != 0) {
+            strcpy(res, "fail - sender nonConsequentAcks not empty");
+            bst_set_destroy(sent_messages);
+            bst_set_destroy(delivered_messages);
+            pflx_stop(sender);
+            pflx_stop(receiver);
+            pflx_destroy(sender);
+            pflx_destroy(receiver);
+            return;
+        }
+        
+        if (receiver->nonConsequentAcks[i]->size != 0) {
+            strcpy(res, "fail - receiver nonConsequentAcks not empty");
+            bst_set_destroy(sent_messages);
+            bst_set_destroy(delivered_messages);
+            pflx_stop(sender);
+            pflx_stop(receiver);
+            pflx_destroy(sender);
+            pflx_destroy(receiver);
+            return;
+        }
+    }
+    
+    // Cleanup
+    bst_set_destroy(sent_messages);
+    bst_set_destroy(delivered_messages);
+    pflx_stop(sender);
+    pflx_stop(receiver);
+    pflx_destroy(sender);
+    pflx_destroy(receiver);
+    
+    strcpy(res, "pass");
 }
 
 void testNodeSeq(char* res, Parser* parser) {
