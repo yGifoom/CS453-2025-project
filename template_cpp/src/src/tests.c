@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE      199309L
 #include"logger.h"
 #include"parser.h"
 #include"udp.h"
@@ -10,7 +11,7 @@
 #include<stdlib.h>
 #include<pthread.h>
 #include<string.h>
-#include <time.h>
+#include<time.h>
 
 // test for correctness of logger
 void testLogger(char* res, Parser* parser){

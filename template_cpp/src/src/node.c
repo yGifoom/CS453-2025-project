@@ -102,7 +102,7 @@ int node_loop(Node *node) {
                 logger_flush(node->logger);
             }
             // Send to receiver using 1-based process ID (pflx_send handles conversion)
-            lenMessage = pflx_send(node->socket, buffer, BUFFER_SIZE, recvId);
+            lenMessage = pflx_send(node->socket, buffer, BUFFER_SIZE, node->processId, recvId);
             if(lenMessage < 0){
                 if(DEBUG == 1){
                     snprintf(logBuffer, sizeof(logBuffer), "error in pflxSend! returned %d", lenMessage);
