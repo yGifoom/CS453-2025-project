@@ -9,15 +9,14 @@
 
 // ---------- UDP FUNCTIONS ----------
 
-int udp_send(UDP *udp, const char* ip, short unsigned port, const void* message) {
+int udp_send(UDP *udp, const char* ip, short unsigned port, const void* message, size_t message_size) {
     struct sockaddr_in dest_addr;
     memset(&dest_addr, 0, sizeof(dest_addr));
     dest_addr.sin_family = AF_INET;
     dest_addr.sin_port = htons(port);
     inet_pton(AF_INET, ip, &dest_addr.sin_addr);
 
-    // we assume not too big payloads, conversion to int is no problem
-    ssize_t res = sendto(udp->sockfd, message, strlen(message), 0,
+    ssize_t res = sendto(udp->sockfd, message, message_size, 0,
            (struct sockaddr *)&dest_addr, sizeof(dest_addr));
 
     return (int)res;
@@ -26,11 +25,8 @@ int udp_send(UDP *udp, const char* ip, short unsigned port, const void* message)
 ssize_t udp_recv(UDP *udp, void* buffer, size_t buffer_size) {
     struct sockaddr_in sender_addr;
     socklen_t addr_len = sizeof(sender_addr);
-    ssize_t len = recvfrom(udp->sockfd, buffer, buffer_size - 1, 0,
+    ssize_t len = recvfrom(udp->sockfd, buffer, buffer_size, 0,
                            (struct sockaddr *)&sender_addr, &addr_len);
-    if (len > 0) {
-        ((char*)buffer)[len] = '\0';  // Null-terminate the received data
-    }
     return len;
 }
 
@@ -57,11 +53,8 @@ ssize_t udp_recv_timeout(UDP *udp, void* buffer, size_t buffer_size, int timeout
     // Data is available, proceed with recv
     struct sockaddr_in sender_addr;
     socklen_t addr_len = sizeof(sender_addr);
-    ssize_t len = recvfrom(udp->sockfd, buffer, buffer_size - 1, 0,
+    ssize_t len = recvfrom(udp->sockfd, buffer, buffer_size, 0,
                            (struct sockaddr *)&sender_addr, &addr_len);
-    if (len > 0) {
-        ((char*)buffer)[len] = '\0';  // Null-terminate the received data
-    }
     return len;
 }
 

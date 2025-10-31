@@ -131,7 +131,7 @@ void testUdp(char* res, Parser* parser){
     memset(buffer_b, 0, sizeof(buffer_b));
     
     // A sends to B
-    udp_send(udp_a, hosts[1].ip_readable, port_b, test_message);
+    udp_send(udp_a, hosts[1].ip_readable, port_b, test_message, sizeof(char)*strlen(test_message));
     
     // B receives from A
     ssize_t received_len = udp_recv(udp_b, buffer_b, sizeof(buffer_b));
@@ -149,7 +149,7 @@ void testUdp(char* res, Parser* parser){
     memset(buffer_a, 0, sizeof(buffer_a));
     
     // B sends ACK to A
-    udp_send(udp_b, hosts[0].ip_readable, port_a, ack_message);
+    udp_send(udp_b, hosts[0].ip_readable, port_a, ack_message, sizeof(char)*strlen(ack_message));
     
     // A receives ACK from B
     received_len = udp_recv(udp_a, buffer_a, sizeof(buffer_a));
@@ -216,9 +216,10 @@ void testPflx(char* res, Parser* parser){
     
     for (size_t i = 1; i <= NUM_MESSAGES; i++) {
         char message[64];
-        snprintf(message, sizeof(message), "msg_%zu", i);
+        snprintf(message, sizeof(message), "1 %zu", i);
+        printf("TEST: about to get into pflx send\n"); fflush(stdout);
         
-        if (pflx_send(sender, message, strlen(message) + 1, sender_id, receiver_id) != 0) {
+        if (pflx_send(sender, message, sizeof(char) * strlen(message) + 1, sender_id, receiver_id) != 0) {
             strcpy(res, "fail - pflx send");
             bst_set_destroy(sent_messages);
             bst_set_destroy(delivered_messages);
@@ -235,15 +236,18 @@ void testPflx(char* res, Parser* parser){
     // Wait for all messages to be delivered
     size_t max_wait_iterations = NUM_MESSAGES * 100;
     size_t wait_count = 0;
+    printf("TEST: about to get into pflx recv\n"); fflush(stdout);
     
     while (wait_count < max_wait_iterations) {
         pflx_message* msg = NULL;
         void* buffer = malloc(sizeof(pflx_message*));
-        
-        if (pflx_recv(receiver, buffer, sizeof(pflx_message*)) == 0) {
-            memcpy(&msg, buffer, sizeof(pflx_message*));
+        size_t* msg_size = malloc(sizeof(size_t*));
+        printf("TEST: about to get into pflx recv\n"); fflush(stdout);
+        if (pflx_recv(receiver, buffer, msg_size) == 0) {
+            memcpy(msg, buffer, *msg_size);
+            free(msg_size);
             free(buffer);
-            
+            printf("TEST: checking duplicate delivery\n"); fflush(stdout);
             if (msg) {
                 // Check for duplicate delivery
                 if (bst_set_lookup(delivered_messages, msg->messageID) == 1) {

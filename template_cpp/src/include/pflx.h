@@ -13,7 +13,7 @@ typedef struct {
     pthread_mutex_t mutex;
 } ack_state;
 
-typedef struct {
+typedef struct pflx{
     UDP* udpSocket;
     queue_t* upQueue;
     queue_t* downQueue;
@@ -21,6 +21,7 @@ typedef struct {
 
     const Host* phonebook;
     size_t ownMessageID;
+    pthread_mutex_t ownMessageID_mutex;
     ack_state* expectedConsequentAck; // was size_t*
     bst_set** nonConsequentAcks; // array of maps of size phonebook_size
     
@@ -42,7 +43,7 @@ int pflx_send(pflx* pflx, void* message, size_t messageSize, size_t originID, si
 // recieve a message following the perfect link properties
 // pops the buffer the pop of upQueue, puts result in buffer
 // upcalled by udp
-int pflx_recv(pflx* pflx, void* buffer, size_t buffSize); 
+int pflx_recv(pflx* pflx, void* buffer, size_t* buffSize); 
 
 // continuously check in downQueue
 // if there should be messages to be sent

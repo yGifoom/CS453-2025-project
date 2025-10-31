@@ -1,4 +1,5 @@
 #include<queue.h>
+#include<stdio.h>
 
 int queue_push(queue_t *q, void *data, size_t dataSize){
     int err = pthread_mutex_lock(&(q->mutex));

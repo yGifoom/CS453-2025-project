@@ -46,7 +46,7 @@ int node_loop(Node *node) {
     
     // initialization
     void* buffer = malloc(BUFFER_SIZE);
-    char logBuffer[256];
+    char logBuffer[256]; size_t* lenRecvMessage = NULL;
     char* res;
     int lenMessage;
     time_t last_flush = time(NULL);
@@ -74,7 +74,7 @@ int node_loop(Node *node) {
                 logger_add(node->logger, "Receiver waiting for message...");
                 logger_flush(node->logger);
             }
-            pflx_recv(node->socket, buffer, BUFFER_SIZE);
+            pflx_recv(node->socket, buffer, lenRecvMessage);
 
             if(DEBUG == 1 && buffer != NULL){
                 snprintf(logBuffer, sizeof(logBuffer), "recieved: %s", (char* )buffer);
@@ -82,7 +82,7 @@ int node_loop(Node *node) {
                 logger_flush(node->logger);
             }
             if(buffer != NULL){
-                snprintf(logBuffer, sizeof(logBuffer), "d %s", (char* )buffer);
+                snprintf(logBuffer, *lenRecvMessage, "d %s", (char* )buffer);
                 logger_add(node->logger, logBuffer);
                 maxExpectedMess--;
             }

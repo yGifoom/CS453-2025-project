@@ -12,7 +12,7 @@ typedef struct{
 
 // send with udp
 // downcalled by pflx.pflx_send
-int udp_send(UDP *udp, const char* ip, short unsigned port, const void *message);
+int udp_send(UDP *udp, const char* ip, short unsigned port, const void *message, size_t message_size);
 
 // recieve with udp  
 // upcalles pflx.pflx_recv
