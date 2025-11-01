@@ -3,6 +3,7 @@
 
 #include "../include/parser.h"
 
+void tests(char* res, Parser* parser);
 void testLogger(char* res, Parser* parser);
 void testUdp(char* res, Parser* parser);
 void testPflx(char* res, Parser* parser);

@@ -2,6 +2,48 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "../include_tests/tests.h"
+#include"node.h"
+
+const int TESTING = 0;
+
+void tests(char* res, Parser* parser){
+    /*
+    char* res = malloc(sizeof(char) * 4);
+    testLogger(res, parser);
+    printf("Test Logger: %s\n", res);
+    free(res);
+
+    char* udp_res = malloc(sizeof(char) * 50);
+    testUdp(udp_res, parser);
+    printf("Test UDP: %s\n", udp_res);
+    free(udp_res);
+    */
+    /*
+    char* queue_res = malloc(sizeof(char) * 50);
+    testQueue(queue_res, parser);
+    printf("Test Queue: %s\n", queue_res);
+    free(queue_res);*/
+    /*
+    char* pflx_res = malloc(sizeof(char) * 50);
+    testPflx(pflx_res, parser);
+    printf("Test Pflx: %s\n", pflx_res);
+    free(pflx_res);*/
+    /*
+    char* bst_res = malloc(sizeof(char) * 50);
+    testBstSet(bst_res, parser);
+    printf("Test BST Set: %s\n", bst_res);
+    free(bst_res);*/
+    
+    /*
+    char* node_res = malloc(sizeof(char) * 50);
+    testNodeSeq(node_res, parser);
+    printf("Test NodeSeq: %s\n", node_res);
+    free(node_res);
+    */
+
+
+    return;
+}
 
 int main(int argc, char** argv) {
 
@@ -51,40 +93,45 @@ int main(int argc, char** argv) {
     printf("Doing some initialization...\n\n");
     printf("Broadcasting and delivering messages...\n\n");
 
-    /*
-    char* res = malloc(sizeof(char) * 4);
-    testLogger(res, parser);
-    printf("Test Logger: %s\n", res);
-    free(res);
+    if(TESTING == 1){
+        char* res = malloc(256);
+        tests(res, parser);
+        printf("run all tests");
+    }
+    else{
+        // Get host information from parser
+        size_t hosts_count;
+        const Host* hosts = parser_get_hosts(parser, &hosts_count);
+        
+        const size_t NUM_MESSAGES = parser_get_num_messages(parser);
+        if (NUM_MESSAGES == 0) {
+            printf("fail - no messages in config");
+            return 1;
+        }
+        
+        const size_t nodeId = parser_get_id(parser);
 
-    char* udp_res = malloc(sizeof(char) * 50);
-    testUdp(udp_res, parser);
-    printf("Test UDP: %s\n", udp_res);
-    free(udp_res);
-    */
-    /*
-    char* queue_res = malloc(sizeof(char) * 50);
-    testQueue(queue_res, parser);
-    printf("Test Queue: %s\n", queue_res);
-    free(queue_res);*/
-    /*
-    char* pflx_res = malloc(sizeof(char) * 50);
-    testPflx(pflx_res, parser);
-    printf("Test Pflx: %s\n", pflx_res);
-    free(pflx_res);*/
-    /*
-    char* bst_res = malloc(sizeof(char) * 50);
-    testBstSet(bst_res, parser);
-    printf("Test BST Set: %s\n", bst_res);
-    free(bst_res);*/
-    
-    
-    char* node_res = malloc(sizeof(char) * 50);
-    testNodeSeq(node_res, parser);
-    printf("Test NodeSeq: %s\n", node_res);
-    free(node_res);
-    
-    parser_destroy(parser);
+        // Create temporary log files
+        const char* node_log = parser_get_output_path(parser);
+        printf("initializing node....\n");
+        
+        // Initialize nodes using node_init
+        Node* node = node_init(nodeId, NUM_MESSAGES, hosts, hosts_count, node_log);
+        if (!node) {
+            printf("fail - failed to initialize node %zu", node->processId);
+            return 1;
+        }
+        printf("node initialized!\nstarting loop\n");
+        
+
+        // this will block indefinetly, or until it crashes
+        node_loop(node);
+
+        printf("loop finished!\n");
+
+        // Cleanup
+        remove(node_log);
+    }
 
     printf("main has finished\n");
 
