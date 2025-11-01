@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE      199309L
 #include"pflx.h"
 #include"pflx_threads_entry.h"
 #include"udp.h"
@@ -6,7 +7,9 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include <errno.h>
+#include<time.h>
 
+const int CONGESTION_CONTROL = 50000;
 const int BUFFERSIZE = 256;
 const long TIMEOUT_QUEUE_POP = 1000; // in ms
 // Sentinel used to wake and stop the sender loop
@@ -20,6 +23,11 @@ int pflx_start(pflx* pflx){
     pthread_mutex_lock(&pflx->should_stop_mutex);
     pflx->should_stop = 0;
     pthread_mutex_unlock(&pflx->should_stop_mutex);
+
+    //reset network busy
+    pthread_mutex_lock(&pflx->network_busy_mutex);
+    pflx->network_busy = 1;
+    pthread_mutex_unlock(&pflx->network_busy_mutex);
 
     // Start receiver first
     if (pthread_create(&e->recv_tid, NULL, _recv_thread_main, pflx) != 0) {
@@ -96,8 +104,11 @@ int _pflx_send_routine(pflx* pflx){
         if (pflx_should_stop(pflx)) {
             break;
         }
+        // sleep for a little bit as to not overwhelm the network
+        struct timespec ts = { .tv_sec = 0, .tv_nsec = CONGESTION_CONTROL }; // 10ms = 10000000
+        nanosleep(&ts, NULL);
 
-        printf("%d-PFLX SEND ROUTINE: sending new message\n", pflx->udpSocket->sockfd); fflush(stdout);
+        //printf("%d-PFLX SEND ROUTINE: sending new message\n", pflx->udpSocket->sockfd); fflush(stdout);
         // pop a pflx_message* (not reusing 'frame' as holder)
         void* popped = NULL;
         int res = queue_pop_timed(pflx->downQueue, &popped, &dataSize, TIMEOUT_QUEUE_POP);
@@ -206,6 +217,7 @@ int pflx_recv(pflx* pflx, void* message, size_t* messageSize){
 int _pflx_recv_routine(pflx* pflx){
     // init
     unsigned char* buffer = malloc(BUFFERSIZE);
+    int network_how_busy = 5;
 
     while(1){
         // Exit promptly if stop requested
@@ -219,8 +231,11 @@ int _pflx_recv_routine(pflx* pflx){
         
         if (len == 0) {
             // Timeout occurred
+            network_how_busy--; 
+            if (network_how_busy < 0){pflx_network_change_status(pflx);}
             continue;
         }
+        network_how_busy = 5;
         
         if (len < 0) {
             // Error occurred
@@ -361,6 +376,33 @@ int _pflx_recv_routine(pflx* pflx){
     return 0;
 }
 
+int pflx_network_status(pflx* pflx){
+    int err = pthread_mutex_lock(&pflx->network_busy_mutex);
+    if (err != 0){
+        return -1;
+    }
+    int v = pflx->network_busy;
+    err = pthread_mutex_unlock(&pflx->network_busy_mutex);
+    if (err != 0){
+        return -1;
+    }
+    return v;
+}
+
+int pflx_network_change_status(pflx* pflx){
+    int err = pthread_mutex_lock(&pflx->network_busy_mutex);
+    if (err != 0){
+        return -1;
+    }
+    pflx->network_busy = pflx->network_busy == 0 ? 1 : 0;
+    int v =  pflx->network_busy;
+    err = pthread_mutex_unlock(&pflx->network_busy_mutex);
+    if (err != 0){
+        return -1;
+    }
+    return v;
+}
+
 pflx* pflx_init(short unsigned port, const Host* phonebook, size_t phonebook_size){
     pflx* socket = malloc(sizeof(pflx));
     if (!socket) return NULL;
@@ -389,6 +431,11 @@ pflx* pflx_init(short unsigned port, const Host* phonebook, size_t phonebook_siz
 
     socket->phonebook_size = phonebook_size;
 
+    // network being busy
+    socket->network_busy = 0;
+    pthread_mutex_init(&socket->network_busy_mutex, NULL);
+
+
     // Init graceful stop flag
     socket->should_stop = 0;
     pthread_mutex_init(&socket->should_stop_mutex, NULL);
@@ -416,6 +463,7 @@ int pflx_destroy(pflx* socket){
         bst_set_destroy(socket->nonConsequentAcks[i]);
     }
     free(socket->nonConsequentAcks);
+    pthread_mutex_destroy(&socket->network_busy_mutex);
 
     // Destroy graceful stop mutex
     pthread_mutex_destroy(&socket->should_stop_mutex);

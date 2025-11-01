@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
         
         const size_t NUM_MESSAGES = parser_get_num_messages(parser);
         if (NUM_MESSAGES == 0) {
-            printf("fail - no messages in config");
+            printf("fail - no messages in config\n");
             return 1;
         }
         
@@ -128,9 +128,6 @@ int main(int argc, char** argv) {
         node_loop(node);
 
         printf("loop finished!\n");
-
-        // Cleanup
-        remove(node_log);
     }
 
     printf("main has finished\n");

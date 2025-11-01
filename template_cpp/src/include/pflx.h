@@ -27,6 +27,9 @@ typedef struct pflx{
     
     size_t phonebook_size;
 
+    int network_busy;
+    pthread_mutex_t network_busy_mutex;
+
     // Graceful stop flag (protected by mutex)
     int should_stop;
     pthread_mutex_t should_stop_mutex;
@@ -60,6 +63,14 @@ int _pflx_send_routine(pflx* pflx);
 // puts back on the downQueue acks
 // pushes in upQueue if the message is to be delivered
 int _pflx_recv_routine(pflx* pflx);
+
+// returns 1 (net busy) or 0 (network not busy)
+// returns -1 if err
+int pflx_network_status(pflx* pflx);
+
+// changes status of net atomically
+// returns -1 if err
+int pflx_network_change_status(pflx* pflx);
 
 // construct perfect link
 pflx* pflx_init(short unsigned int port, const Host* phonebook, size_t phonebook_size);
