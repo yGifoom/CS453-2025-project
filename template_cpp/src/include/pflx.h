@@ -84,4 +84,7 @@ size_t ack_read(ack_state* s);
 
 void ack_write(ack_state* s, size_t v);
 
+// returns 1 if s-> value > v, -1 if s-> value < v, else 0
+int ack_compare(ack_state* s, size_t v);
+
 #endif // PFLX_H

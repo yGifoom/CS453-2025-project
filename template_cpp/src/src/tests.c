@@ -236,55 +236,63 @@ void testPflx(char* res, Parser* parser){
     // Wait for all messages to be delivered
     size_t max_wait_iterations = NUM_MESSAGES * 100;
     size_t wait_count = 0;
-    printf("TEST: about to get into pflx recv\n"); fflush(stdout);
     
     while (wait_count < max_wait_iterations) {
-        pflx_message* msg = NULL;
-        void* buffer = malloc(sizeof(pflx_message*));
-        size_t* msg_size = malloc(sizeof(size_t*));
+        // allocate a real buffer and size holder for pflx_recv
+        char recv_buf[256] = {0};
+        size_t recv_len = 0;
+
         printf("TEST: about to get into pflx recv\n"); fflush(stdout);
-        if (pflx_recv(receiver, buffer, msg_size) == 0) {
-            memcpy(msg, buffer, *msg_size);
-            free(msg_size);
-            free(buffer);
+        //struct timespec ts_10s = { .tv_sec = 3, .tv_nsec = 0 }; // 3s
+        //nanosleep(&ts_10s, NULL);
+        
+        if (pflx_recv(receiver, recv_buf, &recv_len) == 0) {
             printf("TEST: checking duplicate delivery\n"); fflush(stdout);
-            if (msg) {
-                // Check for duplicate delivery
-                if (bst_set_lookup(delivered_messages, msg->messageID) == 1) {
-                    strcpy(res, "fail - duplicate message delivered");
-                    pflx_message_destroy(msg);
-                    bst_set_destroy(sent_messages);
-                    bst_set_destroy(delivered_messages);
-                    pflx_stop(sender);
-                    pflx_stop(receiver);
-                    pflx_destroy(sender);
-                    pflx_destroy(receiver);
-                    return;
-                }
-                
-                // Check if message was actually sent
-                if (bst_set_lookup(sent_messages, msg->messageID) == 0) {
-                    strcpy(res, "fail - delivered message was never sent");
-                    pflx_message_destroy(msg);
-                    bst_set_destroy(sent_messages);
-                    bst_set_destroy(delivered_messages);
-                    pflx_stop(sender);
-                    pflx_stop(receiver);
-                    pflx_destroy(sender);
-                    pflx_destroy(receiver);
-                    return;
-                }
-                
-                bst_set_add(delivered_messages, msg->messageID);
-                pflx_message_destroy(msg);
-                
-                // Check if all messages delivered
-                if (delivered_messages->size == NUM_MESSAGES) {
-                    break;
-                }
+
+            // payload format: "<senderId> <messageId>"
+            size_t sender_parsed = 0;
+            size_t msg_id_parsed = 0;
+            if (sscanf(recv_buf, "%zu %zu", &sender_parsed, &msg_id_parsed) != 2) {
+                strcpy(res, "fail - malformed delivered payload");
+                bst_set_destroy(sent_messages);
+                bst_set_destroy(delivered_messages);
+                pflx_stop(sender);
+                pflx_stop(receiver);
+                pflx_destroy(sender);
+                pflx_destroy(receiver);
+                return;
             }
-        } else {
-            free(buffer);
+
+            // Check for duplicate delivery
+            if (bst_set_lookup(delivered_messages, msg_id_parsed) == 1) {
+                strcpy(res, "fail - duplicate message delivered");
+                bst_set_destroy(sent_messages);
+                bst_set_destroy(delivered_messages);
+                pflx_stop(sender);
+                pflx_stop(receiver);
+                pflx_destroy(sender);
+                pflx_destroy(receiver);
+                return;
+            }
+            
+            // Check if message was actually sent
+            if (bst_set_lookup(sent_messages, msg_id_parsed) == 0) {
+                strcpy(res, "fail - delivered message was never sent");
+                bst_set_destroy(sent_messages);
+                bst_set_destroy(delivered_messages);
+                pflx_stop(sender);
+                pflx_stop(receiver);
+                pflx_destroy(sender);
+                pflx_destroy(receiver);
+                return;
+            }
+            
+            bst_set_add(delivered_messages, msg_id_parsed);
+            
+            // Check if all messages delivered
+            if (delivered_messages->size == NUM_MESSAGES) {
+                break;
+            }
         }
         
         wait_count++;
