@@ -26,6 +26,10 @@ typedef struct pflx{
     bst_set** nonConsequentAcks; // array of maps of size phonebook_size
     
     size_t phonebook_size;
+
+    // Graceful stop flag (protected by mutex)
+    int should_stop;
+    pthread_mutex_t should_stop_mutex;
 } pflx;
 
 // start up the network routines
@@ -86,5 +90,9 @@ void ack_write(ack_state* s, size_t v);
 
 // returns 1 if s-> value > v, -1 if s-> value < v, else 0
 int ack_compare(ack_state* s, size_t v);
+
+// Thread-safe helpers for graceful stop
+void pflx_request_stop(pflx* pflx);
+int pflx_should_stop(pflx* pflx);
 
 #endif // PFLX_H

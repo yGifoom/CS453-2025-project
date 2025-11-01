@@ -7,10 +7,17 @@
 #include<stdio.h>
 
 const int BUFFERSIZE = 256;
+// Sentinel used to wake and stop the sender loop
+#define PFLX_SHUTDOWN_SENTINEL ((void*)-1)
 
 int pflx_start(pflx* pflx){
     _pflx_threads_entry* e = _thr_get(pflx, 1);
     if (!e) return -1;
+
+    // reset graceful stop flag
+    pthread_mutex_lock(&pflx->should_stop_mutex);
+    pflx->should_stop = 0;
+    pthread_mutex_unlock(&pflx->should_stop_mutex);
 
     // Start receiver first
     if (pthread_create(&e->recv_tid, NULL, _recv_thread_main, pflx) != 0) {
@@ -35,10 +42,16 @@ int pflx_stop(pflx* pflx){
     _pflx_threads_entry* e = _thr_get(pflx, 0);
     if (!e) return -1;
 
-    // Cancel and join both threads
-    if (e->send_started) pthread_cancel(e->send_tid);
-    if (e->recv_started) pthread_cancel(e->recv_tid);
+    // Request graceful stop
+    pflx_request_stop(pflx);
 
+    // Wake sender loop (if waiting on downQueue)
+    if (e->send_started) {
+        // push a poison pill; queue stores pointer values
+        (void)queue_push(pflx->downQueue, PFLX_SHUTDOWN_SENTINEL, sizeof(pflx_message*));
+    }
+
+    // No need to wake recv loop (it uses a 1s timeout), just wait
     if (e->send_started) { pthread_join(e->send_tid, NULL); e->send_started = 0; }
     if (e->recv_started) { pthread_join(e->recv_tid, NULL); e->recv_started = 0; }
 
@@ -77,13 +90,26 @@ int _pflx_send_routine(pflx* pflx){
     size_t dataSize;
 
     while (1){
+        // If stop requested and we aren't blocked, exit
+        if (pflx_should_stop(pflx)) {
+            break;
+        }
+
         printf("%d-PFLX SEND ROUTINE: sending new message\n", pflx->udpSocket->sockfd); fflush(stdout);
         // pop a pflx_message* (not reusing 'frame' as holder)
         void* popped = NULL;
         int res = queue_pop(pflx->downQueue, &popped, &dataSize);
         if (res != 0){
+            free(frame);
             return res;
         }
+
+        // Check for shutdown sentinel
+        if (popped == PFLX_SHUTDOWN_SENTINEL) {
+            printf("%d-PFLX SEND ROUTINE: shutdown sentinel received, exiting\n", pflx->udpSocket->sockfd); fflush(stdout);
+            break;
+        }
+
         pflx_message* msg_to_send = (pflx_message*)popped;
 
         size_t ack_msg_id;
@@ -145,7 +171,9 @@ int _pflx_send_routine(pflx* pflx){
             }
         }
     }
-    return 1;
+
+    free(frame);
+    return 0;
 }
 
 // returns what is deliverable: ("%zu %zu", senderid msgId)
@@ -171,6 +199,12 @@ int _pflx_recv_routine(pflx* pflx){
     unsigned char* buffer = malloc(BUFFERSIZE);
 
     while(1){
+        // Exit promptly if stop requested
+        if (pflx_should_stop(pflx)) {
+            printf("%d-PFLX RECV ROUTINE: stop requested, exiting\n", pflx->udpSocket->sockfd); fflush(stdout);
+            break;
+        }
+
         ssize_t len = udp_recv_timeout(pflx->udpSocket, buffer, BUFFERSIZE, 1000); // 1 second timeout
         printf("%d-PFLX RECV ROUTINE: just udp recvd wh result %ld\n", pflx->udpSocket->sockfd, len); fflush(stdout);
         
@@ -181,6 +215,7 @@ int _pflx_recv_routine(pflx* pflx){
         
         if (len < 0) {
             // Error occurred
+            free(buffer);
             return 1;
         }
 
@@ -313,7 +348,8 @@ int _pflx_recv_routine(pflx* pflx){
             continue;
         }
     }
-    return 1;
+    free(buffer);
+    return 0;
 }
 
 pflx* pflx_init(short unsigned port, const Host* phonebook, size_t phonebook_size){
@@ -343,6 +379,11 @@ pflx* pflx_init(short unsigned port, const Host* phonebook, size_t phonebook_siz
     }
 
     socket->phonebook_size = phonebook_size;
+
+    // Init graceful stop flag
+    socket->should_stop = 0;
+    pthread_mutex_init(&socket->should_stop_mutex, NULL);
+
     return socket;
 }
 
@@ -366,6 +407,10 @@ int pflx_destroy(pflx* socket){
         bst_set_destroy(socket->nonConsequentAcks[i]);
     }
     free(socket->nonConsequentAcks);
+
+    // Destroy graceful stop mutex
+    pthread_mutex_destroy(&socket->should_stop_mutex);
+
     free(socket);
     return 0;
 }
@@ -430,4 +475,19 @@ int ack_compare(ack_state* s, size_t v){
     }
     pthread_mutex_unlock(&s->mutex);
     return res;
+}
+
+// Thread-safe helpers for graceful stop
+void pflx_request_stop(pflx* pflx){
+    if (!pflx) return;
+    pthread_mutex_lock(&pflx->should_stop_mutex);
+    pflx->should_stop = 1;
+    pthread_mutex_unlock(&pflx->should_stop_mutex);
+}
+int pflx_should_stop(pflx* pflx){
+    if (!pflx) return 1;
+    pthread_mutex_lock(&pflx->should_stop_mutex);
+    int v = pflx->should_stop;
+    pthread_mutex_unlock(&pflx->should_stop_mutex);
+    return v;
 }

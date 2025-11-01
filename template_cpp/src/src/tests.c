@@ -274,6 +274,7 @@ void testPflx(char* res, Parser* parser){
                 pflx_destroy(receiver);
                 return;
             }
+            printf("TEST: checking if message was actually sent\n"); fflush(stdout);
             
             // Check if message was actually sent
             if (bst_set_lookup(sent_messages, msg_id_parsed) == 0) {
@@ -288,7 +289,7 @@ void testPflx(char* res, Parser* parser){
             }
             
             bst_set_add(delivered_messages, msg_id_parsed);
-            
+            printf("TEST: checking if all messages delivered\n"); fflush(stdout);
             // Check if all messages delivered
             if (delivered_messages->size == NUM_MESSAGES) {
                 break;
@@ -299,6 +300,7 @@ void testPflx(char* res, Parser* parser){
         struct timespec ts_1ms = { .tv_sec = 0, .tv_nsec = 1000000 }; // 1ms
         nanosleep(&ts_1ms, NULL);
     }
+    printf("TEST: checking all messages delivered\n"); fflush(stdout);
     
     // Verify all sent messages were delivered
     if (delivered_messages->size != NUM_MESSAGES) {
@@ -311,6 +313,7 @@ void testPflx(char* res, Parser* parser){
         pflx_destroy(receiver);
         return;
     }
+    printf("TEST: checking each messages delivered\n"); fflush(stdout);
     
     // Verify each sent message was delivered
     for (size_t i = 1; i <= NUM_MESSAGES; i++) {
@@ -331,6 +334,7 @@ void testPflx(char* res, Parser* parser){
         struct timespec ts_100ms = { .tv_sec = 0, .tv_nsec = 100000000 }; // 100ms
         nanosleep(&ts_100ms, NULL);
     }
+    printf("TEST: checking nonConsequentAcks empty\n"); fflush(stdout);
     
     // Verify nonConsequentAcks is empty for both sender and receiver
     for (size_t i = 0; i < hosts_count; i++) {
@@ -356,7 +360,7 @@ void testPflx(char* res, Parser* parser){
             return;
         }
     }
-    
+    printf("TEST: cleanup!\n"); fflush(stdout);
     // Cleanup
     bst_set_destroy(sent_messages);
     bst_set_destroy(delivered_messages);
