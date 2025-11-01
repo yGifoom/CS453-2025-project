@@ -5,8 +5,10 @@
 #include<string.h>
 #include<stdlib.h>
 #include<stdio.h>
+#include <errno.h>
 
 const int BUFFERSIZE = 256;
+const long TIMEOUT_QUEUE_POP = 1000; // in ms
 // Sentinel used to wake and stop the sender loop
 #define PFLX_SHUTDOWN_SENTINEL ((void*)-1)
 
@@ -98,8 +100,11 @@ int _pflx_send_routine(pflx* pflx){
         printf("%d-PFLX SEND ROUTINE: sending new message\n", pflx->udpSocket->sockfd); fflush(stdout);
         // pop a pflx_message* (not reusing 'frame' as holder)
         void* popped = NULL;
-        int res = queue_pop(pflx->downQueue, &popped, &dataSize);
+        int res = queue_pop_timed(pflx->downQueue, &popped, &dataSize, TIMEOUT_QUEUE_POP);
         if (res != 0){
+            if (res == ETIMEDOUT){
+                continue;
+            }
             free(frame);
             return res;
         }
@@ -181,10 +186,14 @@ int pflx_recv(pflx* pflx, void* message, size_t* messageSize){
     pflx_message* msg = NULL;
     size_t msgPtrSize = sizeof(pflx_message*);
     printf("%d-PFLX RECV: started\n", pflx->udpSocket->sockfd); fflush(stdout);
-    int res = queue_pop(pflx->upQueue, (void **)&msg, &msgPtrSize);
+    int res = queue_pop_timed(pflx->upQueue, (void **)&msg, &msgPtrSize, TIMEOUT_QUEUE_POP);
     if(res != 0){
-        printf("failed gracefully\n"); fflush(stdout);
-        return 1;
+        if (res == ETIMEDOUT){
+            printf("PFLX RECV: timed out\n"); fflush(stdout);
+            return res;
+        }
+        printf("PFLX RECV: failed gracefully\n"); fflush(stdout);
+        return res;
     }
 
     memcpy(message, msg->message, msg->messageSize);
@@ -235,7 +244,7 @@ int _pflx_recv_routine(pflx* pflx){
         size_t messageID = hdr[1];
         size_t targetID = hdr[2];
         size_t payloadSize = hdr[3];
-        if (hdr_size + payloadSize > (size_t)len) {
+        if (hdr_size + payloadSize != (size_t)len) {
             // malformed, ignore
             printf("%d-PFLX RECV ROUTINE: malformed message\n", pflx->udpSocket->sockfd); fflush(stdout);
 
@@ -294,7 +303,7 @@ int _pflx_recv_routine(pflx* pflx){
         // Try to parse as two integers separated by whitespace
         } else if (msg_recvd->message &&
                    sscanf((char*)msg_recvd->message, "%zu %zu", &senderId, &msgId) == 2  
-                   && senderId < pflx->phonebook_size 
+                   && senderId >= 1 && senderId < pflx->phonebook_size 
                    && msgId > 0){
             printf("%d-PFLX RECV ROUTINE: recvd message '%s', from %zu\n", pflx->udpSocket->sockfd, (char*)msg_recvd->message, senderId); fflush(stdout);
             // strictly reciever behaviour

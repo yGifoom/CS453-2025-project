@@ -31,4 +31,11 @@ int queue_pop(queue_t *q, void **data, size_t *dataSize);
 
 size_t queue_size(queue_t *q);
 
+// Add a timed pop wrapper around queue_pop.
+// timeout_ms semantics:
+//   < 0: block indefinitely (same as queue_pop)
+//   = 0: non-blocking, return ETIMEDOUT if empty
+//   > 0: wait up to timeout_ms milliseconds
+int queue_pop_timed(queue_t *q, void **data, size_t *dataSize, long timeout_ms);
+
 #endif
