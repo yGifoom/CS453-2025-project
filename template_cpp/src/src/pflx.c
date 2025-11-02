@@ -12,6 +12,7 @@
 const int CONGESTION_CONTROL = 50000;
 const int BUFFERSIZE = 256;
 const long TIMEOUT_QUEUE_POP = 1000; // in ms
+const long MAX_DOWNQUEUE_SIZE = 100;
 // Sentinel used to wake and stop the sender loop
 #define PFLX_SHUTDOWN_SENTINEL ((void*)-1)
 
@@ -104,9 +105,6 @@ int _pflx_send_routine(pflx* pflx){
         if (pflx_should_stop(pflx)) {
             break;
         }
-        // sleep for a little bit as to not overwhelm the network
-        struct timespec ts = { .tv_sec = 0, .tv_nsec = CONGESTION_CONTROL }; // 10ms = 10000000
-        nanosleep(&ts, NULL);
 
         //printf("%d-PFLX SEND ROUTINE: sending new message\n", pflx->udpSocket->sockfd); fflush(stdout);
         // pop a pflx_message* (not reusing 'frame' as holder)
@@ -161,6 +159,10 @@ int _pflx_send_routine(pflx* pflx){
             }
         } else {
             // strictly sender behaviour
+            // sleep for a little bit as to not overwhelm the network
+            struct timespec ts = { .tv_sec = 0, .tv_nsec = CONGESTION_CONTROL }; // 10ms = 10000000
+            nanosleep(&ts, NULL);
+
             int ok = bst_set_lookup(pflx->nonConsequentAcks[index], msg_to_send->messageID);
             if(ok || ack_read(&pflx->expectedConsequentAck[index]) > msg_to_send->messageID){
                 // already acked -> deliver
@@ -168,7 +170,6 @@ int _pflx_send_routine(pflx* pflx){
                 printf("%d-PFLX SEND ROUTINE: pushing into upQueue '%s'\n", pflx->udpSocket->sockfd, 
                     (char*)msgToUp->message); fflush(stdout);
                 queue_push(pflx->upQueue, popped, dataSize);
-                continue;
             } else{
                 lenMessageSent = udp_send(pflx->udpSocket, 
                                     pflx->phonebook[index].ip_readable, 
@@ -284,6 +285,23 @@ int _pflx_recv_routine(pflx* pflx){
             // sender logic
             // Use the peer index (origin of ACK), not our own ID
             size_t peer_index = origin_index;
+
+            // BOUNDS CHECK (should be caught earlier, but defensive)
+            if (peer_index >= pflx->phonebook_size) {
+                printf("%d-PFLX RECV ROUTINE: dropping out of bounds ack (peer_index=%zu)\n",
+                       pflx->udpSocket->sockfd, peer_index); fflush(stdout);
+                pflx_message_destroy(msg_recvd);
+                continue;
+            }
+            
+            // SAFETY: Verify BST exists
+            if (!pflx->nonConsequentAcks[peer_index]) {
+                printf("%d-PFLX RECV ROUTINE: ERROR - BST at peer_index %zu is NULL!\n",
+                       pflx->udpSocket->sockfd, peer_index);
+                pflx_message_destroy(msg_recvd);
+                continue;
+            }
+
             if (peer_index >= pflx->phonebook_size) {
                 // out-of-range ACK; drop
                 printf("%d-PFLX RECV ROUTINE: dropping out of bounds ack\n", pflx->udpSocket->sockfd); fflush(stdout);
@@ -302,12 +320,28 @@ int _pflx_recv_routine(pflx* pflx){
 
                 size_t removed = bst_set_compact_consequent(
                     pflx->nonConsequentAcks[peer_index], 
-                    pflx->expectedConsequentAck[peer_index].value + 1);
+                    pflx->expectedConsequentAck[peer_index].value);
 
                 pflx->expectedConsequentAck[peer_index].value += removed + 1;
             } else if (ack_msg_id > pflx->expectedConsequentAck[peer_index].value) {
                 printf("%d-PFLX RECV ROUTINE: ACK is non-consequent, adding to set\n",
                        pflx->udpSocket->sockfd); fflush(stdout);
+                
+                    // BOUNDS CHECK for origin_index
+                if (origin_index >= pflx->phonebook_size) {
+                    printf("%d-PFLX RECV ROUTINE: origin_index %zu out of bounds!\n",
+                        pflx->udpSocket->sockfd, origin_index);
+                    pflx_message_destroy(msg_recvd);
+                    continue;
+                }
+                
+                // SAFETY: Verify BST exists
+                if (!pflx->nonConsequentAcks[origin_index]) {
+                    printf("%d-PFLX RECV ROUTINE: ERROR - BST at origin_index %zu is NULL!\n",
+                        pflx->udpSocket->sockfd, origin_index);
+                    pflx_message_destroy(msg_recvd);
+                    continue;
+                }
 
                 int res = bst_set_add(pflx->nonConsequentAcks[peer_index], ack_msg_id);
                 if(res == -1){
@@ -328,17 +362,31 @@ int _pflx_recv_routine(pflx* pflx){
                    && msgId > 0){
             printf("%d-PFLX RECV ROUTINE: recvd message '%s', from %zu\n", pflx->udpSocket->sockfd, (char*)msg_recvd->message, senderId); fflush(stdout);
             // strictly reciever behaviour
+            // copy values we'll need
+            size_t msgOriginID =  msg_recvd->originID;
+            size_t msgTargetID = msg_recvd->targetID;
+            size_t msgMessageID = msg_recvd->messageID;
+            
+            // drop if too many packets
+            if (queue_size(pflx->downQueue) > MAX_DOWNQUEUE_SIZE){
+                printf("%d-PFLX RECV ROUTINE: dropping packet, recieving too many\n", pflx->udpSocket->sockfd); fflush(stdout);
+                pflx_message_destroy(msg_recvd);
+                continue;
+            }
+            printf("%d-PFLX RECV ROUTINE: downqueuesize = %zu\n", pflx->udpSocket->sockfd,queue_size(pflx->downQueue)); fflush(stdout);
+            printf("%d-PFLX RECV ROUTINE: upqueuesize = %zu\n", pflx->udpSocket->sockfd, queue_size(pflx->upQueue)); fflush(stdout);
+
 
             int delivered = 0; // track if we hand the pointer up
             size_t expectedConsequentId;
             pthread_mutex_lock(&pflx->expectedConsequentAck[origin_index].mutex);
 
             expectedConsequentId = pflx->expectedConsequentAck[origin_index].value;
-            if(expectedConsequentId > msg_recvd->messageID){
-                // expectedConsequentId > msg_recvd->messageID - old message, already delivered
+            if(expectedConsequentId > msgMessageID){
+                // expectedConsequentId > msgMessageID - old message, already delivered
                 printf("%d-PFLX RECV ROUTINE: recvd OLD msg (ID %zu < expected %zu), not delivering\n", 
-                       pflx->udpSocket->sockfd, msg_recvd->messageID, expectedConsequentId); fflush(stdout);
-            }else if(expectedConsequentId == msg_recvd->messageID){
+                       pflx->udpSocket->sockfd, msgMessageID, expectedConsequentId); fflush(stdout);
+            }else if(expectedConsequentId == msgMessageID){
                 printf("%d-PFLX RECV ROUTINE: recvd an expected continuous msg\n", pflx->udpSocket->sockfd); fflush(stdout);
                 
                 size_t removed = bst_set_compact_consequent(
@@ -350,9 +398,9 @@ int _pflx_recv_routine(pflx* pflx){
                 // deliver message (push capsule)
                 queue_push(pflx->upQueue, msg_recvd, sizeof(pflx_message*));
                 delivered = 1;
-            }else if(expectedConsequentId < msg_recvd->messageID){
+            }else if(expectedConsequentId < msgMessageID){
                 // non consequent, let's save it
-                int res = bst_set_add(pflx->nonConsequentAcks[origin_index], msg_recvd->messageID);
+                int res = bst_set_add(pflx->nonConsequentAcks[origin_index], msgMessageID);
                 if (res == -1){
                     pthread_mutex_unlock(&pflx->expectedConsequentAck[origin_index].mutex);
                     return res;
@@ -371,9 +419,9 @@ int _pflx_recv_routine(pflx* pflx){
 
             // sending ack back regardless
             char ackbuf[64];
-            int n = snprintf(ackbuf, sizeof(ackbuf), "ack %zu", msg_recvd->messageID);
+            int n = snprintf(ackbuf, sizeof(ackbuf), "ack %zu", msgMessageID);
             if (n > 0 && (size_t)n < sizeof(ackbuf)) {
-                int sres = pflx_send(pflx, ackbuf, (size_t)n + 1, msg_recvd->targetID, msg_recvd->originID);
+                int sres = pflx_send(pflx, ackbuf, (size_t)n + 1, msgTargetID, msgOriginID);
                 if (sres != 0){
                     return 1;
                 }
@@ -426,16 +474,21 @@ int pflx_network_change_status(pflx* pflx){
 pflx* pflx_init(short unsigned port, const Host* phonebook, size_t phonebook_size){
     pflx* socket = malloc(sizeof(pflx));
     if (!socket) return NULL;
+
+    // allocate array of bst_set* of length phonebook_size
+    socket->nonConsequentAcks = malloc(sizeof(bst_set*) * phonebook_size);
+    for(size_t i = 0; i < phonebook_size; i++){
+        socket->nonConsequentAcks[i] = bst_set_init();
+        if (!socket->nonConsequentAcks[i]){
+            free(socket);
+            return NULL;
+        }
+    }
     
     UDP* udpSocket = udp_init(port);
 
     socket->upQueue = queue_init();
     socket->downQueue = queue_init();
-    // allocate array of bst_set* of length phonebook_size
-    socket->nonConsequentAcks = malloc(sizeof(bst_set*) * phonebook_size);
-    for(size_t i = 0; i < phonebook_size; i++){
-        socket->nonConsequentAcks[i] = bst_set_init();
-    }
 
     socket->udpSocket = udpSocket;
     socket->phonebook = phonebook;

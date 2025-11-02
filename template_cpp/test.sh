@@ -5,9 +5,9 @@ set -e  # Exit on error
 # Get the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Check if required arguments areprovided
+# Check if required arguments are provided
 if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 <hosts_file> <config_file> [output_dir]"
+    echo "Usage: $0 <hosts_file> <config_file> [output_dir] [--valgrind]"
     exit 1
 fi
 
@@ -15,10 +15,31 @@ fi
 HOSTS_FILE="$(realpath "$1")"
 CONFIG_FILE="$(realpath "$2")"
 OUTPUT_DIR="${3:-$SCRIPT_DIR/output}"
+
+# Check for valgrind flag
+USE_VALGRIND=0
+for arg in "$@"; do
+    if [ "$arg" = "--valgrind" ]; then
+        USE_VALGRIND=1
+        echo "Valgrind mode enabled"
+        break
+    fi
+done
+
 # Also make output dir absolute
 OUTPUT_DIR="$(realpath -m "$OUTPUT_DIR")"
 # Call the binary directly instead of through run.sh
 BINARY="$SCRIPT_DIR/bin/da_proc"
+
+# Check if valgrind is available when requested
+if [ $USE_VALGRIND -eq 1 ]; then
+    if ! command -v valgrind &> /dev/null; then
+        echo "Error: valgrind requested but not found in PATH"
+        echo "Install with: sudo apt-get install valgrind"
+        exit 1
+    fi
+    echo "Valgrind found: $(which valgrind)"
+fi
 
 # Verify that the binary exists and is executable
 if [ ! -f "$BINARY" ]; then
@@ -45,6 +66,11 @@ fi
 
 # Create output directory if it doesn't exist
 mkdir -p "$OUTPUT_DIR"
+
+# Create valgrind subdirectory if needed
+if [ $USE_VALGRIND -eq 1 ]; then
+    mkdir -p "$OUTPUT_DIR/valgrind"
+fi
 
 # Array to store PIDs
 declare -a PIDS
@@ -81,10 +107,28 @@ echo ""
 # Start each process
 for ((i=1; i<=NUM_PROCESSES; i++)); do
     OUTPUT_FILE="$OUTPUT_DIR/proc_$i.output"
+    STDERR_FILE="$OUTPUT_DIR/proc_$i.stderr"
     
     echo "Starting process $i (output: $OUTPUT_FILE)..."
-    # Pass config as positional argument (no --config flag)
-    "$BINARY" --id "$i" --hosts "$HOSTS_FILE" --output "$OUTPUT_FILE" "$CONFIG_FILE" > "$OUTPUT_DIR/proc_$i.stderr" 2>&1 &
+    
+    if [ $USE_VALGRIND -eq 1 ]; then
+        VALGRIND_LOG="$OUTPUT_DIR/valgrind/proc_$i.valgrind"
+        echo "  Valgrind log: $VALGRIND_LOG"
+        
+        # Run with valgrind
+        valgrind \
+            --leak-check=full \
+            --show-leak-kinds=all \
+            --track-origins=yes \
+            --verbose \
+            --log-file="$VALGRIND_LOG" \
+            "$BINARY" --id "$i" --hosts "$HOSTS_FILE" --output "$OUTPUT_FILE" "$CONFIG_FILE" \
+            > "$STDERR_FILE" 2>&1 &
+    else
+        # Run normally without valgrind
+        "$BINARY" --id "$i" --hosts "$HOSTS_FILE" --output "$OUTPUT_FILE" "$CONFIG_FILE" \
+            > "$STDERR_FILE" 2>&1 &
+    fi
     
     PID=$!
     PIDS+=($PID)
@@ -96,6 +140,10 @@ done
 
 echo ""
 echo "All processes started. PIDs: ${PIDS[@]}"
+if [ $USE_VALGRIND -eq 1 ]; then
+    echo "NOTE: Valgrind will make execution MUCH slower"
+    echo "Valgrind logs will be in: $OUTPUT_DIR/valgrind/"
+fi
 echo "Press Ctrl+C to stop all processes gracefully..."
 echo ""
 
@@ -113,7 +161,7 @@ cleanup() {
     
     # Wait for all processes to terminate (with timeout)
     echo "Waiting for processes to terminate..."
-    TIMEOUT=5
+    TIMEOUT=10  # Increased timeout for valgrind
     for PID in "${PIDS[@]}"; do
         COUNT=0
         while ps -p $PID > /dev/null 2>&1 && [ $COUNT -lt $TIMEOUT ]; do
@@ -130,6 +178,23 @@ cleanup() {
     
     echo "All processes stopped."
     echo "Output files are in: $OUTPUT_DIR"
+    
+    if [ $USE_VALGRIND -eq 1 ]; then
+        echo ""
+        echo "Valgrind Summary:"
+        echo "================="
+        for ((i=1; i<=NUM_PROCESSES; i++)); do
+            VALGRIND_LOG="$OUTPUT_DIR/valgrind/proc_$i.valgrind"
+            if [ -f "$VALGRIND_LOG" ]; then
+                echo ""
+                echo "Process $i:"
+                grep -E "ERROR SUMMARY|definitely lost|indirectly lost|possibly lost" "$VALGRIND_LOG" | head -n 5
+            fi
+        done
+        echo ""
+        echo "Full valgrind logs in: $OUTPUT_DIR/valgrind/"
+    fi
+    
     exit 0
 }
 
@@ -143,3 +208,19 @@ wait
 echo ""
 echo "All processes completed."
 echo "Output files are in: $OUTPUT_DIR"
+
+if [ $USE_VALGRIND -eq 1 ]; then
+    echo ""
+    echo "Valgrind Summary:"
+    echo "================="
+    for ((i=1; i<=NUM_PROCESSES; i++)); do
+        VALGRIND_LOG="$OUTPUT_DIR/valgrind/proc_$i.valgrind"
+        if [ -f "$VALGRIND_LOG" ]; then
+            echo ""
+            echo "Process $i:"
+            grep -E "ERROR SUMMARY|definitely lost|indirectly lost|possibly lost" "$VALGRIND_LOG" | head -n 5
+        fi
+    done
+    echo ""
+    echo "Full valgrind logs in: $OUTPUT_DIR/valgrind/"
+fi

@@ -1,0 +1,1156 @@
+
+My PID: 202791
+From a new terminal type `kill -SIGINT 202791` or `kill -SIGTERM 202791` to stop processing packets
+
+My ID: 7
+
+List of resolved hosts is:
+==========================
+1
+Human-readable IP: localhost
+Machine-readable IP: 4294967295
+Human-readable Port: 11001
+Machine-readable Port: 63786
+
+2
+Human-readable IP: localhost
+Machine-readable IP: 4294967295
+Human-readable Port: 11002
+Machine-readable Port: 64042
+
+3
+Human-readable IP: localhost
+Machine-readable IP: 4294967295
+Human-readable Port: 11003
+Machine-readable Port: 64298
+
+4
+Human-readable IP: localhost
+Machine-readable IP: 4294967295
+Human-readable Port: 11004
+Machine-readable Port: 64554
+
+5
+Human-readable IP: localhost
+Machine-readable IP: 4294967295
+Human-readable Port: 11005
+Machine-readable Port: 64810
+
+6
+Human-readable IP: localhost
+Machine-readable IP: 4294967295
+Human-readable Port: 11006
+Machine-readable Port: 65066
+
+7
+Human-readable IP: localhost
+Machine-readable IP: 4294967295
+Human-readable Port: 11007
+Machine-readable Port: 65322
+
+8
+Human-readable IP: localhost
+Machine-readable IP: 4294967295
+Human-readable Port: 11008
+Machine-readable Port: 43
+
+9
+Human-readable IP: localhost
+Machine-readable IP: 4294967295
+Human-readable Port: 11009
+Machine-readable Port: 299
+
+10
+Human-readable IP: localhost
+Machine-readable IP: 4294967295
+Human-readable Port: 11010
+Machine-readable Port: 555
+
+
+Path to output:
+===============
+/home/ygifoom/epfl/da/CS451-2025-project/template_cpp/output/proc_7.output
+
+Path to config:
+===============
+/home/ygifoom/epfl/da/CS451-2025-project/example/configs/perfect-links.config
+
+Doing some initialization...
+
+Broadcasting and delivering messages...
+
+initializing node....
+node initialized!
+starting loop
+3-PFLX SEND: I am sending '7 1', message of len '4' to process: 10
+3-PFLX SEND: I am sending '7 2', message of len '4' to process: 10
+3-PFLX SEND: I am sending '7 3', message of len '4' to process: 10
+3-PFLX SEND: I am sending '7 4', message of len '4' to process: 10
+3-PFLX SEND: I am sending '7 5', message of len '4' to process: 10
+3-PFLX SEND: I am sending '7 6', message of len '4' to process: 10
+3-PFLX SEND: I am sending '7 7', message of len '4' to process: 10
+3-PFLX SEND: I am sending '7 8', message of len '4' to process: 10
+3-PFLX SEND: I am sending '7 9', message of len '4' to process: 10
+3-PFLX SEND: I am sending '7 10', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 11', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 12', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 13', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 14', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 15', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 16', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 17', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 18', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 19', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 20', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 21', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 22', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 23', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 24', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 25', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 26', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 27', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 28', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 29', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 30', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 31', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 32', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 33', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 34', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 35', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 36', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 37', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 38', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 39', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 40', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 41', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 42', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 43', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 44', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 45', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 46', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 47', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 48', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 49', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 50', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 51', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 52', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 53', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 54', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 55', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 56', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 57', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 58', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 59', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 60', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 61', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 62', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 63', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 64', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 65', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 66', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 67', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 68', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 69', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 70', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 71', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 72', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 73', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 74', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 75', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 76', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 77', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 78', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 79', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 80', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 81', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 82', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 83', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 84', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 85', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 86', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 87', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 88', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 89', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 90', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 91', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 92', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 93', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 94', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 95', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 96', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 97', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 98', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 99', message of len '5' to process: 10
+3-PFLX SEND: I am sending '7 100', message of len '6' to process: 10
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 30
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 31
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 32
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 33
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 34
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 35
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 36
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 37
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 2
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 38
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 39
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 40
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 41
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 42
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 43
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 44
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 45
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 46
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 47
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 48
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 49
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 50
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 3
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 51
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 52
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 53
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 54
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 65
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 66
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 67
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 68
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 30'
+3-I am recieving '7 30', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 31'
+3-I am recieving '7 31', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 32'
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 69
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-I am recieving '7 32', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 33'
+3-I am recieving '7 33', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 34'
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 70
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-I am recieving '7 34', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 35'
+3-I am recieving '7 35', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 36'
+3-I am recieving '7 36', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 37'
+3-I am recieving '7 37', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 2'
+3-I am recieving '7 2', message of len '4'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 38'
+3-I am recieving '7 38', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 39'
+3-I am recieving '7 39', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 40'
+3-I am recieving '7 40', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 41'
+3-I am recieving '7 41', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 42'
+3-I am recieving '7 42', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 43'
+3-I am recieving '7 43', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 44'
+3-I am recieving '7 44', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 45'
+3-I am recieving '7 45', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 46'
+3-I am recieving '7 46', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 47'
+3-I am recieving '7 47', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 48'
+3-I am recieving '7 48', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 49'
+3-I am recieving '7 49', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 50'
+3-I am recieving '7 50', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 3'
+3-I am recieving '7 3', message of len '4'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 51'
+3-I am recieving '7 51', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 52'
+3-I am recieving '7 52', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 53'
+3-I am recieving '7 53', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 54'
+3-I am recieving '7 54', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 79
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 80
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 65'
+3-I am recieving '7 65', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 66'
+3-I am recieving '7 66', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 67'
+3-I am recieving '7 67', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 68'
+3-I am recieving '7 68', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 81
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 69'
+3-I am recieving '7 69', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 70'
+3-I am recieving '7 70', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 82
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 83
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 84
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 85
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 79'
+3-I am recieving '7 79', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 80'
+3-I am recieving '7 80', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 81'
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-I am recieving '7 81', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 12
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 13
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 14
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 15
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 82'
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 16
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-I am recieving '7 82', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 83'
+3-I am recieving '7 83', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 17
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 18
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 19
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 84'
+3-I am recieving '7 84', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 85'
+3-I am recieving '7 85', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 20
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 21
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 22
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 23
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 24
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 1
+3-PFLX RECV ROUTINE: ACK matches expected consequent, updating
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 25
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 12'
+3-I am recieving '7 12', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 13'
+3-I am recieving '7 13', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 14'
+3-I am recieving '7 14', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 15'
+3-I am recieving '7 15', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 16'
+3-I am recieving '7 16', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 17'
+3-I am recieving '7 17', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 18'
+3-I am recieving '7 18', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 55
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 19'
+3-I am recieving '7 19', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 20'
+3-I am recieving '7 20', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 21'
+3-I am recieving '7 21', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 56
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 22'
+3-I am recieving '7 22', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 23'
+3-PFLX SEND ROUTINE: pushing into upQueue '7 24'
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 57
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 1'
+3-PFLX SEND ROUTINE: pushing into upQueue '7 25'
+3-I am recieving '7 23', message of len '5'
+3-PFLX RECV: started
+3-I am recieving '7 24', message of len '5'
+3-PFLX RECV: started
+3-I am recieving '7 1', message of len '4'
+3-PFLX RECV: started
+3-I am recieving '7 25', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 58
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 59
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 60
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 61
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 62
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 55'
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-I am recieving '7 55', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 4
+3-PFLX SEND ROUTINE: pushing into upQueue '7 56'
+3-PFLX RECV ROUTINE: ACK matches expected consequent, updating
+3-PFLX SEND ROUTINE: pushing into upQueue '7 57'
+3-I am recieving '7 56', message of len '5'
+3-PFLX RECV: started
+3-I am recieving '7 57', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 58'
+3-I am recieving '7 58', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 59'
+3-I am recieving '7 59', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 60'
+3-PFLX SEND ROUTINE: pushing into upQueue '7 61'
+3-I am recieving '7 60', message of len '5'
+3-PFLX RECV: started
+3-I am recieving '7 61', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 62'
+3-I am recieving '7 62', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 4'
+3-I am recieving '7 4', message of len '4'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 86
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 87
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 88
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 91
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 91'
+3-I am recieving '7 91', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 92
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 93
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 94
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 95
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 6
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 86'
+3-I am recieving '7 86', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 87'
+3-I am recieving '7 87', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 96
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 88'
+3-I am recieving '7 88', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 92'
+3-I am recieving '7 92', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 93'
+3-I am recieving '7 93', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 94'
+3-I am recieving '7 94', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 95'
+3-I am recieving '7 95', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 6'
+3-I am recieving '7 6', message of len '4'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 96'
+3-I am recieving '7 96', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 63
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 64
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 63'
+3-I am recieving '7 63', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 71
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 64'
+3-I am recieving '7 64', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 71'
+3-I am recieving '7 71', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 72
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 90
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 90'
+3-I am recieving '7 90', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 92
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 93
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 94
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 95
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 6
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 72'
+3-I am recieving '7 72', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 96
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 97
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 97'
+3-I am recieving '7 97', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 98
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 90
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 97
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 98
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 99
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 40
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 100
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 7
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 74
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 75
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 98'
+3-I am recieving '7 98', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 99'
+3-I am recieving '7 99', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 100'
+3-I am recieving '7 100', message of len '6'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 5
+3-PFLX RECV ROUTINE: ACK matches expected consequent, updating
+3-PFLX SEND ROUTINE: pushing into upQueue '7 7'
+3-I am recieving '7 7', message of len '4'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 76
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 77
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 74'
+3-I am recieving '7 74', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 75'
+3-I am recieving '7 75', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 5'
+3-I am recieving '7 5', message of len '4'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 76'
+3-I am recieving '7 76', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 77'
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 78
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-I am recieving '7 77', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 78'
+3-I am recieving '7 78', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 89
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 75
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 5
+3-PFLX SEND ROUTINE: pushing into upQueue '7 89'
+3-I am recieving '7 89', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 76
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 77
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 78
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 89
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 97
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 76
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 77
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 78
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 89
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 98
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 99
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 40
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 100
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 75
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 5
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 76
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 77
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 78
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 89
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 10
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 11
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 26
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 10'
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-I am recieving '7 10', message of len '5'
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 27
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 11'
+3-I am recieving '7 11', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 26'
+3-I am recieving '7 26', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 28
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 27'
+3-I am recieving '7 27', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 28'
+3-I am recieving '7 28', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 29
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 73
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX SEND ROUTINE: pushing into upQueue '7 29'
+3-I am recieving '7 29', message of len '5'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 8
+3-PFLX RECV ROUTINE: ACK matches expected consequent, updating
+3-PFLX SEND ROUTINE: pushing into upQueue '7 73'
+3-I am recieving '7 73', message of len '5'
+3-PFLX RECV: started
+3-PFLX SEND ROUTINE: pushing into upQueue '7 8'
+3-I am recieving '7 8', message of len '4'
+3-PFLX RECV: started
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 27
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 28
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 29
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 39
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 73
+3-PFLX RECV ROUTINE: ACK is non-consequent, adding to set
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 8
+3-PFLX RECV ROUTINE: just udp recvd wh result 38
+3-PFLX RECV ROUTINE: recreating message from frame
+3-PFLX RECV ROUTINE: entering main logic
+3-PFLX RECV ROUTINE: recieved an ack from 10 for message ID 9
+3-PFLX RECV ROUTINE: ACK matches expected consequent, updating
+3-PFLX SEND ROUTINE: pushing into upQueue '7 9'
+3-I am recieving '7 9', message of len '4'
+3-PFLX SEND ROUTINE: shutdown sentinel received, exiting
+3-PFLX RECV ROUTINE: just udp recvd wh result 0
+3-PFLX RECV ROUTINE: stop requested, exiting
+loop finished!
+main has finished

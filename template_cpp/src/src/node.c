@@ -54,6 +54,10 @@ int node_loop(Node *node) {
     
     // initialization
     void* buffer = malloc(BUFFER_SIZE);
+    if(!buffer){
+        fprintf(stderr, "Failed to allocate buffer\n");
+        return -1;
+    }
     char logBuffer[256]; size_t lenRecvMessage = 0; 
     size_t messagesSent = 0;
     char* res;
@@ -116,7 +120,7 @@ int node_loop(Node *node) {
                 }
             }
 
-            if (pflx_network_status(node->socket) == 0 && maxExpectedMess == 0){
+            if (pflx_network_status(node->socket) == 0 || maxExpectedMess == 0){
                 break;
             }
         }

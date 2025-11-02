@@ -13,15 +13,12 @@ static int height(bst_node* node) {
 
 static int get_balance(bst_node* node) {
     if (!node) return 0;
-    int lh = height(node->left);
-    int rh = height(node->right);
-    int res;
-    if (lh > rh){
-        res = -(lh - rh);
-    }else{
-        res = lh - rh;
-    }
-    return res;
+    
+    // Cast to long to avoid overflow warnings
+    long left_h = height(node->left);
+    long right_h = height(node->right);
+    
+    return (int)(left_h - right_h);
 }
 
 static bst_node* create_node(size_t key) {
@@ -88,23 +85,23 @@ static bst_node* insert_helper(bst_node* node, size_t key, int* status) {
     int balance = get_balance(node);
     
     // Left Left Case
-    if (balance > 1 && key < node->left->key) {
+    if (balance > 1 && node->left && key < node->left->key) {
         return rotate_right(node);
     }
     
     // Right Right Case
-    if (balance < -1 && key > node->right->key) {
+    if (balance < -1 && node->right && key > node->right->key) {
         return rotate_left(node);
     }
     
     // Left Right Case
-    if (balance > 1 && key > node->left->key) {
+    if (balance > 1 && node->left && key > node->left->key) {
         node->left = rotate_left(node->left);
         return rotate_right(node);
     }
     
     // Right Left Case
-    if (balance < -1 && key < node->right->key) {
+    if (balance < -1 && node->right && key < node->right->key) {
         node->right = rotate_right(node->right);
         return rotate_left(node);
     }
