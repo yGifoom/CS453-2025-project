@@ -293,24 +293,30 @@ int _pflx_recv_routine(pflx* pflx){
             }
             printf("%d-PFLX RECV ROUTINE: recieved an ack from %zu for message ID %zu\n",
                    pflx->udpSocket->sockfd, msg_recvd->originID, ack_msg_id); fflush(stdout);
+            
+            pthread_mutex_lock(&pflx->expectedConsequentAck[peer_index].mutex);
 
-            size_t expected = ack_read(&pflx->expectedConsequentAck[peer_index]);
-            if (expected == ack_msg_id){
+            if (pflx->expectedConsequentAck[peer_index].value == ack_msg_id){
                 printf("%d-PFLX RECV ROUTINE: ACK matches expected consequent, updating\n",
                        pflx->udpSocket->sockfd); fflush(stdout);
+
                 size_t removed = bst_set_compact_consequent(
-                    pflx->nonConsequentAcks[peer_index], expected + 1);
-                ack_write(&pflx->expectedConsequentAck[peer_index],
-                          ack_msg_id + removed + 1);
-            } else if (ack_msg_id > expected) {
+                    pflx->nonConsequentAcks[peer_index], 
+                    pflx->expectedConsequentAck[peer_index].value + 1);
+
+                pflx->expectedConsequentAck[peer_index].value += removed + 1;
+            } else if (ack_msg_id > pflx->expectedConsequentAck[peer_index].value) {
                 printf("%d-PFLX RECV ROUTINE: ACK is non-consequent, adding to set\n",
                        pflx->udpSocket->sockfd); fflush(stdout);
+
                 int res = bst_set_add(pflx->nonConsequentAcks[peer_index], ack_msg_id);
                 if(res == -1){
                     pflx_message_destroy(msg_recvd);
+                    pthread_mutex_unlock(&pflx->expectedConsequentAck[peer_index].mutex);
                     return res;
                 }
             }
+            pthread_mutex_unlock(&pflx->expectedConsequentAck[peer_index].mutex);
             // ACKs are protocol-internal: never deliver to app
             pflx_message_destroy(msg_recvd);
             continue;
@@ -322,33 +328,47 @@ int _pflx_recv_routine(pflx* pflx){
                    && msgId > 0){
             printf("%d-PFLX RECV ROUTINE: recvd message '%s', from %zu\n", pflx->udpSocket->sockfd, (char*)msg_recvd->message, senderId); fflush(stdout);
             // strictly reciever behaviour
-            int howNew = ack_compare(&pflx->expectedConsequentAck[origin_index], msg_recvd->messageID);
-            int delivered = 0; // track if we hand the pointer to the app
-            if(howNew == 0){
+
+            int delivered = 0; // track if we hand the pointer up
+            size_t expectedConsequentId;
+            pthread_mutex_lock(&pflx->expectedConsequentAck[origin_index].mutex);
+
+            expectedConsequentId = pflx->expectedConsequentAck[origin_index].value;
+            if(expectedConsequentId > msg_recvd->messageID){
+                // expectedConsequentId > msg_recvd->messageID - old message, already delivered
+                printf("%d-PFLX RECV ROUTINE: recvd OLD msg (ID %zu < expected %zu), not delivering\n", 
+                       pflx->udpSocket->sockfd, msg_recvd->messageID, expectedConsequentId); fflush(stdout);
+            }else if(expectedConsequentId == msg_recvd->messageID){
                 printf("%d-PFLX RECV ROUTINE: recvd an expected continuous msg\n", pflx->udpSocket->sockfd); fflush(stdout);
                 
                 size_t removed = bst_set_compact_consequent(
                     pflx->nonConsequentAcks[origin_index],
-                    ack_read(&pflx->expectedConsequentAck[origin_index]) + 1);
+                    expectedConsequentId);
 
-                ack_write(&pflx->expectedConsequentAck[origin_index],
-                            msg_recvd->messageID + removed + 1);
+                pflx->expectedConsequentAck[origin_index].value += removed + 1;
 
                 // deliver message (push capsule)
                 queue_push(pflx->upQueue, msg_recvd, sizeof(pflx_message*));
                 delivered = 1;
-            }else if(howNew < 0){
+            }else if(expectedConsequentId < msg_recvd->messageID){
                 // non consequent, let's save it
                 int res = bst_set_add(pflx->nonConsequentAcks[origin_index], msg_recvd->messageID);
                 if (res == -1){
+                    pthread_mutex_unlock(&pflx->expectedConsequentAck[origin_index].mutex);
                     return res;
                 }
+                // Only deliver if it's truly new (res == 0 means newly added)
                 if (res == 0){
-                    printf("%d-PFLX RECV ROUTINE: recvd an expected NON-continuous msg howNew = %d\n", pflx->udpSocket->sockfd, howNew); fflush(stdout);
+                    printf("%d-PFLX RECV ROUTINE: recvd an expected NON-continuous NEW msg\n", pflx->udpSocket->sockfd); fflush(stdout);
                     queue_push(pflx->upQueue, msg_recvd, sizeof(pflx_message*));
                     delivered = 1;
+                } else {
+                    printf("%d-PFLX RECV ROUTINE: recvd DUPLICATE non-continuous msg, not delivering\n", pflx->udpSocket->sockfd); fflush(stdout);
                 }
             }
+
+            pthread_mutex_unlock(&pflx->expectedConsequentAck[origin_index].mutex);
+
             // sending ack back regardless
             char ackbuf[64];
             int n = snprintf(ackbuf, sizeof(ackbuf), "ack %zu", msg_recvd->messageID);
