@@ -11,8 +11,7 @@ def read_config(config_file):
     with open(config_file, 'r') as f:
         lines = [line.strip() for line in f if line.strip()]
     
-    # Perfect Links format: num_messages num_processes (on one line)
-    # num_processes is the total number of processes including the receiver
+    # Try to parse as Perfect Links format first: num_messages num_processes
     parts = lines[0].split()
     num_messages = int(parts[0])
     num_processes = int(parts[1]) if len(parts) > 1 else None
@@ -190,8 +189,175 @@ def check_perfect_links(config, hosts_file, output_dir):
     return all_errors
 
 def check_fifo_broadcast(config, hosts_file, output_dir):
-    """Check FIFO Broadcast correctness (not implemented)."""
-    return {"FIFO Broadcast": ["Not implemented yet"]}
+    """Check FIFO Broadcast correctness."""
+    num_messages = config['num_messages']
+    process_ids = read_hosts(hosts_file)
+    
+    all_errors = {}
+    
+    # Parse all output files first
+    broadcasts = {}  # process_id -> list of broadcast msg_ids
+    deliveries = {}  # process_id -> {sender_id -> list of delivered msg_ids}
+    
+    for process_id in process_ids:
+        output_file = Path(output_dir) / f"proc_{process_id}.output"
+        
+        if not output_file.exists():
+            all_errors[f"Process {process_id}"] = [f"Output file not found: {output_file}"]
+            continue
+        
+        broadcasts[process_id] = []
+        deliveries[process_id] = defaultdict(list)
+        
+        with open(output_file, 'r') as f:
+            line_num = 0
+            for line in f:
+                line_num += 1
+                line = line.strip()
+                if not line:
+                    continue
+                
+                parts = line.split()
+                
+                if parts[0] == 'b':
+                    # Broadcast entry: b msg_id
+                    if len(parts) != 2:
+                        if f"Process {process_id}" not in all_errors:
+                            all_errors[f"Process {process_id}"] = []
+                        all_errors[f"Process {process_id}"].append(
+                            f"Line {line_num}: Invalid broadcast format '{line}' (expected 'b msg_id')"
+                        )
+                        continue
+                    try:
+                        msg_id = int(parts[1])
+                        broadcasts[process_id].append(msg_id)
+                    except ValueError:
+                        if f"Process {process_id}" not in all_errors:
+                            all_errors[f"Process {process_id}"] = []
+                        all_errors[f"Process {process_id}"].append(
+                            f"Line {line_num}: Invalid integer in '{line}'"
+                        )
+                
+                elif parts[0] == 'd':
+                    # Delivery entry: d sender_id msg_id
+                    if len(parts) != 3:
+                        if f"Process {process_id}" not in all_errors:
+                            all_errors[f"Process {process_id}"] = []
+                        all_errors[f"Process {process_id}"].append(
+                            f"Line {line_num}: Invalid delivery format '{line}' (expected 'd sender_id msg_id')"
+                        )
+                        continue
+                    try:
+                        sender_id = int(parts[1])
+                        msg_id = int(parts[2])
+                        deliveries[process_id][sender_id].append(msg_id)
+                    except ValueError:
+                        if f"Process {process_id}" not in all_errors:
+                            all_errors[f"Process {process_id}"] = []
+                        all_errors[f"Process {process_id}"].append(
+                            f"Line {line_num}: Invalid integers in '{line}'"
+                        )
+                else:
+                    if f"Process {process_id}" not in all_errors:
+                        all_errors[f"Process {process_id}"] = []
+                    all_errors[f"Process {process_id}"].append(
+                        f"Line {line_num}: Unknown entry type '{parts[0]}' (expected 'b' or 'd')"
+                    )
+    
+    # Check each process
+    for process_id in process_ids:
+        if f"Process {process_id}" in all_errors:
+            continue  # Skip if already has parsing errors
+        
+        errors = []
+        
+        # Check broadcasts are in order and complete
+        expected_broadcasts = list(range(1, num_messages + 1))
+        if broadcasts[process_id] != expected_broadcasts:
+            if len(broadcasts[process_id]) != num_messages:
+                errors.append(f"Expected {num_messages} broadcasts, got {len(broadcasts[process_id])}")
+            
+            # Check for missing broadcasts
+            broadcast_set = set(broadcasts[process_id])
+            for msg_id in expected_broadcasts:
+                if msg_id not in broadcast_set:
+                    errors.append(f"Message {msg_id} was never broadcast")
+            
+            # Check for duplicates
+            seen = set()
+            for msg_id in broadcasts[process_id]:
+                if msg_id in seen:
+                    errors.append(f"Duplicate broadcast: message {msg_id}")
+                    break  # Only report once
+                seen.add(msg_id)
+            
+            # Check for order
+            if broadcasts[process_id] != sorted(broadcasts[process_id]):
+                errors.append(f"Broadcasts not in ascending order")
+        
+        # Check FIFO ordering for deliveries from each sender
+        for sender_id, delivered_msgs in deliveries[process_id].items():
+            # Check messages are in ascending order (FIFO property)
+            if delivered_msgs != sorted(delivered_msgs):
+                errors.append(f"FIFO violation: messages from process {sender_id} not delivered in order")
+            
+            # Check for duplicates in deliveries
+            if len(delivered_msgs) != len(set(delivered_msgs)):
+                duplicates = [msg for msg in set(delivered_msgs) if delivered_msgs.count(msg) > 1]
+                errors.append(f"Duplicate deliveries from process {sender_id}: {duplicates[:5]}")
+        
+        # Check that delivered messages were broadcast
+        for sender_id, delivered_msgs in deliveries[process_id].items():
+            if sender_id not in broadcasts:
+                errors.append(f"Process {sender_id} delivered messages but has no broadcast record")
+                continue
+            
+            broadcast_set = set(broadcasts[sender_id])
+            for msg_id in delivered_msgs:
+                if msg_id not in broadcast_set:
+                    errors.append(f"Delivered message ({sender_id}, {msg_id}) was never broadcast by process {sender_id}")
+                    break  # Only report first occurrence
+        
+        if errors:
+            all_errors[f"Process {process_id}"] = errors
+    
+    # Check agreement: if one process delivered a message, all must deliver it
+    # Collect all (sender_id, msg_id) pairs that were delivered by at least one process
+    all_delivered = set()
+    for process_id in process_ids:
+        for sender_id, msgs in deliveries[process_id].items():
+            for msg_id in msgs:
+                all_delivered.add((sender_id, msg_id))
+    
+    # Check each process has delivered all messages
+    for process_id in process_ids:
+        errors = all_errors.get(f"Process {process_id}", [])
+        
+        for sender_id, msg_id in all_delivered:
+            if msg_id not in deliveries[process_id].get(sender_id, []):
+                errors.append(f"Message ({sender_id}, {msg_id}) was delivered by some process but not by this one")
+        
+        if errors:
+            all_errors[f"Process {process_id}"] = errors
+    
+    # Check that all broadcasts are delivered by all other processes
+    for sender_id in process_ids:
+        if sender_id not in broadcasts:
+            continue
+        
+        for msg_id in broadcasts[sender_id]:
+            for receiver_id in process_ids:
+                if receiver_id == sender_id:
+                    continue  # Don't check self-delivery
+                
+                if msg_id not in deliveries[receiver_id].get(sender_id, []):
+                    if f"Process {receiver_id}" not in all_errors:
+                        all_errors[f"Process {receiver_id}"] = []
+                    all_errors[f"Process {receiver_id}"].append(
+                        f"Message ({sender_id}, {msg_id}) was broadcast but never delivered"
+                    )
+    
+    return all_errors
 
 def check_lattice_agreement(config, hosts_file, output_dir):
     """Check Lattice Agreement correctness (not implemented)."""
