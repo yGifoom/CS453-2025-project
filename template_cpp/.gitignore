@@ -87,3 +87,6 @@ cleanup.sh
 
 # Outputs
 output/*
+
+# pycache
+__pycache__/
