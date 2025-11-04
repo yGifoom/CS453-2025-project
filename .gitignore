@@ -90,3 +90,9 @@ dkms.conf
 example/output/*
 example/hosts
 output.txt
+
+# testing stuff 
+test.txt
+
+# example configs
+example/*

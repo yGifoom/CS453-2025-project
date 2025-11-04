@@ -84,4 +84,6 @@ dkms.conf
 # script ownership
 build.sh
 cleanup.sh
-output/
+
+# Outputs
+output/*

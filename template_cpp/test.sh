@@ -138,6 +138,15 @@ for ((i=1; i<=NUM_PROCESSES; i++)); do
     sleep 0.1
 done
 
+# Record start time (with fallback for systems without millisecond support)
+if date +%s%3N &>/dev/null; then
+    START_TIME=$(date +%s%3N)
+    USE_MS=1
+else
+    START_TIME=$(date +%s)000
+    USE_MS=0
+fi
+
 echo ""
 echo "All processes started. PIDs: ${PIDS[@]}"
 if [ $USE_VALGRIND -eq 1 ]; then
@@ -176,7 +185,17 @@ cleanup() {
         fi
     done
     
+    # Calculate execution time
+    if [ $USE_MS -eq 1 ]; then
+        END_TIME=$(date +%s%3N)
+    else
+        END_TIME=$(date +%s)000
+    fi
+    EXECUTION_TIME_MS=$((END_TIME - START_TIME))
+    EXECUTION_TIME_S=$(awk "BEGIN {printf \"%.3f\", $EXECUTION_TIME_MS/1000}")
+    
     echo "All processes stopped."
+    echo "Execution time: ${EXECUTION_TIME_S}s (${EXECUTION_TIME_MS}ms)"
     echo "Output files are in: $OUTPUT_DIR"
     
     if [ $USE_VALGRIND -eq 1 ]; then
@@ -204,9 +223,19 @@ trap cleanup SIGINT SIGTERM
 # Wait for all background processes
 wait
 
+# Calculate execution time
+if [ $USE_MS -eq 1 ]; then
+    END_TIME=$(date +%s%3N)
+else
+    END_TIME=$(date +%s)000
+fi
+EXECUTION_TIME_MS=$((END_TIME - START_TIME))
+EXECUTION_TIME_S=$(awk "BEGIN {printf \"%.3f\", $EXECUTION_TIME_MS/1000}")
+
 # If we get here, all processes exited normally
 echo ""
 echo "All processes completed."
+echo "Execution time: ${EXECUTION_TIME_S}s (${EXECUTION_TIME_MS}ms)"
 echo "Output files are in: $OUTPUT_DIR"
 
 if [ $USE_VALGRIND -eq 1 ]; then
