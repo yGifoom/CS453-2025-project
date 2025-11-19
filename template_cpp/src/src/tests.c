@@ -8,6 +8,7 @@
 #include"utils.h"
 #include"queue.h"
 #include"bst_set.h"
+#include"ba.h"
 #include<stdlib.h>
 #include<pthread.h>
 #include<string.h>
@@ -810,5 +811,332 @@ void testBstSet(char* res, Parser* parser) {
     }
     
     bst_set_destroy(set);
+    strcpy(res, "pass");
+}
+void* ba_add_thread(void* arg);
+void* ba_rm_thread(void* arg);
+void* ba_get_thread(void* arg);
+typedef struct {
+    ba* bit_array;
+    size_t start_idx;
+    size_t end_idx;
+} ba_thread_data_t;
+
+void* ba_add_thread(void* arg) {
+    ba_thread_data_t* td = (ba_thread_data_t*)arg;
+    for (size_t i = td->start_idx; i < td->end_idx; i++) {
+        ba_add(td->bit_array, i);
+    }
+    return NULL;
+}
+
+void* ba_rm_thread(void* arg) {
+    ba_thread_data_t* td = (ba_thread_data_t*)arg;
+    for (size_t i = td->start_idx; i < td->end_idx; i++) {
+        ba_rm(td->bit_array, i);
+    }
+    return NULL;
+}
+
+void* ba_get_thread(void* arg) {
+    ba_thread_data_t* td = (ba_thread_data_t*)arg;
+    int* results = malloc((td->end_idx - td->start_idx) * sizeof(int));
+    for (size_t i = td->start_idx; i < td->end_idx; i++) {
+        results[i - td->start_idx] = ba_get(td->bit_array, i);
+    }
+    return results;
+}
+
+void testBa(char* res, Parser* parser) {
+    // Test 1: Initialization
+    ba* bit_array = ba_init(100);
+    if (bit_array == NULL) {
+        strcpy(res, "fail - ba_init");
+        return;
+    }
+    
+    if (bit_array->length != 100) {
+        strcpy(res, "fail - wrong length");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    // Test 2: Initial state (all bits should be 0)
+    if (ba_sum(bit_array) != 0) {
+        strcpy(res, "fail - initial sum not 0");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    for (size_t i = 0; i < 100; i++) {
+        if (ba_get(bit_array, i) != 0) {
+            strcpy(res, "fail - initial bit not 0");
+            ba_destroy(bit_array);
+            return;
+        }
+    }
+    
+    // Test 3: Add single bits
+    if (ba_add(bit_array, 0) != 0) {
+        strcpy(res, "fail - ba_add first bit");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    if (ba_get(bit_array, 0) != 1) {
+        strcpy(res, "fail - first bit not set");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    if (ba_sum(bit_array) != 1) {
+        strcpy(res, "fail - sum after first add");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    // Test 4: Add multiple bits
+    ba_add(bit_array, 10);
+    ba_add(bit_array, 50);
+    ba_add(bit_array, 99);
+    
+    if (ba_sum(bit_array) != 4) {
+        strcpy(res, "fail - sum after multiple adds");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    if (ba_get(bit_array, 10) != 1 || ba_get(bit_array, 50) != 1 || ba_get(bit_array, 99) != 1) {
+        strcpy(res, "fail - multiple bits not set");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    // Test 5: Remove bits
+    if (ba_rm(bit_array, 10) != 0) {
+        strcpy(res, "fail - ba_rm");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    if (ba_get(bit_array, 10) != 0) {
+        strcpy(res, "fail - bit not removed");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    if (ba_sum(bit_array) != 3) {
+        strcpy(res, "fail - sum after remove");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    // Test 6: ba_where_1
+    size_t* indexes_1 = NULL;
+    size_t count_1 = 0;
+    
+    if (ba_where_1(bit_array, &indexes_1, &count_1) == 0 && count_1 == 0) {
+        strcpy(res, "fail - ba_where_1");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    if (count_1 != 3) {
+        strcpy(res, "fail - ba_where_1 count");
+        free(indexes_1);
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    // Verify indexes are correct (0, 50, 99)
+    size_t expected_1[] = {0, 50, 99};
+    for (size_t i = 0; i < count_1; i++) {
+        if (indexes_1[i] != expected_1[i]) {
+            strcpy(res, "fail - ba_where_1 indexes");
+            free(indexes_1);
+            ba_destroy(bit_array);
+            return;
+        }
+    }
+    free(indexes_1);
+    
+    // Test 7: ba_where_0
+    size_t* indexes_0 = NULL;
+    size_t count_0 = 0;
+    
+    if (ba_where_0(bit_array, &indexes_0, &count_0) == 0 && count_0 == 0) {
+        strcpy(res, "fail - ba_where_0");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    if (count_0 != 97) {
+        strcpy(res, "fail - ba_where_0 count");
+        free(indexes_0);
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    // Verify first few indexes are correct (skip 0, so 1, 2, 3...)
+    for (size_t i = 1; i < 10 && i < count_0; i++) {
+        if (indexes_0[i-1] != i) {
+            strcpy(res, "fail - ba_where_0 indexes");
+            free(indexes_0);
+            ba_destroy(bit_array);
+            return;
+        }
+    }
+    free(indexes_0);
+    
+    // Test 8: Boundary tests - removed negative index test since size_t is unsigned
+    if (ba_add(bit_array, 100) != -1) {
+        strcpy(res, "fail - out of bounds not rejected");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    if (ba_get(bit_array, 100) != -1) {
+        strcpy(res, "fail - out of bounds get not rejected");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    ba_destroy(bit_array);
+    
+    // Test 9: Test across block boundaries (64-bit blocks)
+    bit_array = ba_init(200);
+    if (bit_array == NULL) {
+        strcpy(res, "fail - ba_init for boundary test");
+        return;
+    }
+    
+    // Set bits around block boundaries (63, 64, 127, 128)
+    ba_add(bit_array, 63);
+    ba_add(bit_array, 64);
+    ba_add(bit_array, 127);
+    ba_add(bit_array, 128);
+    
+    if (ba_sum(bit_array) != 4) {
+        strcpy(res, "fail - boundary sum");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    if (ba_get(bit_array, 63) != 1 || ba_get(bit_array, 64) != 1 ||
+        ba_get(bit_array, 127) != 1 || ba_get(bit_array, 128) != 1) {
+        strcpy(res, "fail - boundary bits");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    ba_destroy(bit_array);
+    
+    // Test 10: Concurrent operations
+    bit_array = ba_init(1000);
+    if (bit_array == NULL) {
+        strcpy(res, "fail - concurrent test init");
+        return;
+    }
+    
+    const int NUM_THREADS = 4;
+    pthread_t threads[NUM_THREADS];
+    ba_thread_data_t thread_data[NUM_THREADS];
+    
+    // Each thread adds bits to non-overlapping regions
+    size_t chunk_size = 250;
+    for (size_t i = 0; i < NUM_THREADS; i++) {
+        thread_data[i].bit_array = bit_array;
+        thread_data[i].start_idx = i * chunk_size;
+        thread_data[i].end_idx = (i + 1) * chunk_size;
+        pthread_create(&threads[i], NULL, ba_add_thread, &thread_data[i]);
+    }
+    
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+    
+    // Verify all bits were set
+    if (ba_sum(bit_array) != 1000) {
+        strcpy(res, "fail - concurrent add sum");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    for (size_t i = 0; i < 1000; i++) {
+        if (ba_get(bit_array, i) != 1) {
+            strcpy(res, "fail - concurrent add missing bit");
+            ba_destroy(bit_array);
+            return;
+        }
+    }
+    
+    // Test concurrent remove
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_create(&threads[i], NULL, ba_rm_thread, &thread_data[i]);
+    }
+    
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+    
+    if (ba_sum(bit_array) != 0) {
+        strcpy(res, "fail - concurrent remove sum");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    // Test concurrent read/write
+    // Set first half of bits
+    for (size_t i = 0; i < 500; i++) {
+        ba_add(bit_array, i);
+    }
+    
+    // Thread 1-2: read first half, Thread 3-4: write second half
+    pthread_t read_threads[2];
+    pthread_t write_threads[2];
+    ba_thread_data_t read_data[2];
+    ba_thread_data_t write_data[2];
+    
+    for (size_t i = 0; i < 2; i++) {
+        read_data[i].bit_array = bit_array;
+        read_data[i].start_idx = i * 250;
+        read_data[i].end_idx = (i + 1) * 250;
+        
+        write_data[i].bit_array = bit_array;
+        write_data[i].start_idx = 500 + i * 250;
+        write_data[i].end_idx = 500 + (i + 1) * 250;
+        
+        pthread_create(&read_threads[i], NULL, ba_get_thread, &read_data[i]);
+        pthread_create(&write_threads[i], NULL, ba_add_thread, &write_data[i]);
+    }
+    
+    void* results[2];
+    for (int i = 0; i < 2; i++) {
+        pthread_join(read_threads[i], &results[i]);
+        pthread_join(write_threads[i], NULL);
+    }
+    
+    // Verify read results (first half should all be 1)
+    for (int i = 0; i < 2; i++) {
+        int* read_results = (int*)results[i];
+        for (int j = 0; j < 250; j++) {
+            if (read_results[j] != 1) {
+                strcpy(res, "fail - concurrent read wrong value");
+                free(read_results);
+                ba_destroy(bit_array);
+                return;
+            }
+        }
+        free(read_results);
+    }
+    
+    // Verify all bits are now set
+    if (ba_sum(bit_array) != 1000) {
+        strcpy(res, "fail - concurrent read/write sum");
+        ba_destroy(bit_array);
+        return;
+    }
+    
+    ba_destroy(bit_array);
     strcpy(res, "pass");
 }

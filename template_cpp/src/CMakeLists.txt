@@ -14,6 +14,8 @@ set(SOURCES
     src/tests.c
     src/utils.c
     src/node.c
+
+    src/ba.c
 )
 # DO NOT EDIT THE FOLLOWING LINES
 find_package(Threads)

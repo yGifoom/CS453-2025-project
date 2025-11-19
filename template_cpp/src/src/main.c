@@ -4,7 +4,7 @@
 #include "../include_tests/tests.h"
 #include"node.h"
 
-const int TESTING = 0;
+const int TESTING = 1;
 
 void tests(char* res, Parser* parser){
     /*
@@ -41,6 +41,10 @@ void tests(char* res, Parser* parser){
     free(node_res);
     */
 
+    char* ba_res = malloc(sizeof(char) * 50);
+    testBa(ba_res, parser);
+    printf("Test testBa: %s\n", ba_res);
+    free(ba_res);
 
     return;
 }
@@ -97,6 +101,7 @@ int main(int argc, char** argv) {
         char* res = malloc(256);
         tests(res, parser);
         printf("run all tests");
+        return 0;
     }
     else{
         // Get host information from parser
