@@ -3,17 +3,14 @@
 
 include_directories(include include_tests)
 set(SOURCES 
+    src/bst_test.c
     src/main.c
     src/parser.c
     src/udp.c
     src/bst_set.c
-    src/pflx_threads_entry.c
     src/queue.c
-    src/pflx.c
     src/logger.c
-    src/tests.c
     src/utils.c
-    src/node.c
 
     src/ba.c
 )

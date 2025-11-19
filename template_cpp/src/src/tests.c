@@ -231,7 +231,7 @@ void testPflx(char* res, Parser* parser){
             return;
         }
         
-        bst_set_add(sent_messages, i);
+        bst_set_add(sent_messages, i, NULL, 0);
     }
     
     // Wait for all messages to be delivered
@@ -265,7 +265,9 @@ void testPflx(char* res, Parser* parser){
             }
 
             // Check for duplicate delivery
-            if (bst_set_lookup(delivered_messages, msg_id_parsed) == 1) {
+            void* dup_data = NULL;
+            size_t dup_size = 0;
+            if (bst_set_lookup(delivered_messages, msg_id_parsed, &dup_data, &dup_size) == 1) {
                 strcpy(res, "fail - duplicate message delivered");
                 bst_set_destroy(sent_messages);
                 bst_set_destroy(delivered_messages);
@@ -278,7 +280,9 @@ void testPflx(char* res, Parser* parser){
             printf("TEST: checking if message was actually sent\n"); fflush(stdout);
             
             // Check if message was actually sent
-            if (bst_set_lookup(sent_messages, msg_id_parsed) == 0) {
+            void* sent_data = NULL;
+            size_t sent_size = 0;
+            if (bst_set_lookup(sent_messages, msg_id_parsed, &sent_data, &sent_size) == 0) {
                 strcpy(res, "fail - delivered message was never sent");
                 bst_set_destroy(sent_messages);
                 bst_set_destroy(delivered_messages);
@@ -289,7 +293,7 @@ void testPflx(char* res, Parser* parser){
                 return;
             }
             
-            bst_set_add(delivered_messages, msg_id_parsed);
+            bst_set_add(delivered_messages, msg_id_parsed, NULL, 0);
             printf("TEST: checking if all messages delivered\n"); fflush(stdout);
             // Check if all messages delivered
             if (delivered_messages->size == NUM_MESSAGES) {
@@ -318,7 +322,9 @@ void testPflx(char* res, Parser* parser){
     
     // Verify each sent message was delivered
     for (size_t i = 1; i <= NUM_MESSAGES; i++) {
-        if (bst_set_lookup(delivered_messages, i) == 0) {
+        void* check_data = NULL;
+        size_t check_size = 0;
+        if (bst_set_lookup(delivered_messages, i, &check_data, &check_size) == 0) {
             strcpy(res, "fail - sent message not delivered");
             bst_set_destroy(sent_messages);
             bst_set_destroy(delivered_messages);
@@ -627,192 +633,6 @@ void testQueue(char* res, Parser* parser) {
     strcpy(res, "pass");
 }
 
-void* lookup_thread_func(void* arg);
-void* add_thread_func(void* arg);
-
-void* lookup_thread_func(void* arg) {
-        bst_set* s = (bst_set*)arg;
-        for (size_t i = 1; i <= 100; i++) {
-            if (bst_set_lookup(s, i) != 1) {
-                return (void*)1; // Fail
-            }
-        }
-        return (void*)0; // Success
-    }
-
-void* add_thread_func(void* arg){
-        bst_set* s = (bst_set*)arg;
-        for (size_t i = 101; i <= 200; i++) {
-            bst_set_add(s, i);
-        }
-        return NULL;
-    }
-void testBstSet(char* res, Parser* parser) {
-    // Test 1: Initialization
-    bst_set* set = bst_set_init();
-    if (set == NULL) {
-        strcpy(res, "fail - bst_set init");
-        return;
-    }
-    
-    if (set->size != 0) {
-        strcpy(res, "fail - initial size not 0");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    // Test 2: Add elements
-    if (bst_set_add(set, 50) != 0) {
-        strcpy(res, "fail - add first element");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    if (set->size != 1) {
-        strcpy(res, "fail - size after first add");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    // Add more elements to test balancing
-    size_t keys[] = {30, 70, 20, 40, 60, 80, 10, 25, 35};
-    for (size_t i = 0; i < 9; i++) {
-        if (bst_set_add(set, keys[i]) != 0) {
-            strcpy(res, "fail - add element");
-            bst_set_destroy(set);
-            return;
-        }
-    }
-    
-    if (set->size != 10) {
-        strcpy(res, "fail - size after multiple adds");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    // Test 3: Add duplicate (should return 1)
-    if (bst_set_add(set, 50) != 1) {
-        strcpy(res, "fail - duplicate not detected");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    if (set->size != 10) {
-        strcpy(res, "fail - size changed after duplicate");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    // Test 4: Lookup existing elements
-    if (bst_set_lookup(set, 50) != 1) {
-        strcpy(res, "fail - lookup existing element");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    if (bst_set_lookup(set, 10) != 1) {
-        strcpy(res, "fail - lookup min element");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    if (bst_set_lookup(set, 80) != 1) {
-        strcpy(res, "fail - lookup max element");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    // Test 5: Lookup non-existing elements
-    if (bst_set_lookup(set, 100) != 0) {
-        strcpy(res, "fail - lookup non-existing");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    if (bst_set_lookup(set, 5) != 0) {
-        strcpy(res, "fail - lookup below min");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    // Test 6: Delete elements
-    if (bst_set_delete(set, 20) != 0) {
-        strcpy(res, "fail - delete existing element");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    if (set->size != 9) {
-        strcpy(res, "fail - size after delete");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    if (bst_set_lookup(set, 20) != 0) {
-        strcpy(res, "fail - deleted element still found");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    // Test 7: Delete non-existing element
-    if (bst_set_delete(set, 999) != -1) {
-        strcpy(res, "fail - delete non-existing");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    // Test 8: Delete root and verify balancing
-    if (bst_set_delete(set, 50) != 0) {
-        strcpy(res, "fail - delete root");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    if (bst_set_lookup(set, 30) != 1 || bst_set_lookup(set, 70) != 1) {
-        strcpy(res, "fail - tree corrupted after root delete");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    bst_set_destroy(set);
-    
-    // Test 9: Concurrent operations
-    set = bst_set_init();
-    if (set == NULL) {
-        strcpy(res, "fail - concurrent test init");
-        return;
-    }
-    
-    // Add initial elements
-    for (size_t i = 1; i <= 100; i++) {
-        bst_set_add(set, i);
-    }
-    
-    // Thread-safe lookup while another thread is modifying
-    pthread_t thread1, thread2;
-    
-    pthread_create(&thread1, NULL, add_thread_func, set);
-    pthread_create(&thread2, NULL, lookup_thread_func, set);
-    
-    void* lookup_result;
-    pthread_join(thread1, NULL);
-    pthread_join(thread2, &lookup_result);
-    
-    if (lookup_result != (void*)0) {
-        strcpy(res, "fail - concurrent lookup failed");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    if (set->size != 200) {
-        strcpy(res, "fail - concurrent final size");
-        bst_set_destroy(set);
-        return;
-    }
-    
-    bst_set_destroy(set);
-    strcpy(res, "pass");
-}
 void* ba_add_thread(void* arg);
 void* ba_rm_thread(void* arg);
 void* ba_get_thread(void* arg);

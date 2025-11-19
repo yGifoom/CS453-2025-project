@@ -28,11 +28,11 @@ void tests(char* res, Parser* parser){
     testPflx(pflx_res, parser);
     printf("Test Pflx: %s\n", pflx_res);
     free(pflx_res);*/
-    /*
+    
     char* bst_res = malloc(sizeof(char) * 50);
     testBstSet(bst_res, parser);
     printf("Test BST Set: %s\n", bst_res);
-    free(bst_res);*/
+    free(bst_res);
     
     /*
     char* node_res = malloc(sizeof(char) * 50);
@@ -40,11 +40,11 @@ void tests(char* res, Parser* parser){
     printf("Test NodeSeq: %s\n", node_res);
     free(node_res);
     */
-
+    /*
     char* ba_res = malloc(sizeof(char) * 50);
     testBa(ba_res, parser);
     printf("Test testBa: %s\n", ba_res);
-    free(ba_res);
+    free(ba_res);*/
 
     return;
 }
@@ -104,6 +104,7 @@ int main(int argc, char** argv) {
         return 0;
     }
     else{
+        /*
         // Get host information from parser
         size_t hosts_count;
         const Host* hosts = parser_get_hosts(parser, &hosts_count);
@@ -133,6 +134,7 @@ int main(int argc, char** argv) {
         node_loop(node);
 
         printf("loop finished!\n");
+        */
     }
 
     printf("main has finished\n");
