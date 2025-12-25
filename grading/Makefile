@@ -1,4 +1,5 @@
 BIN := ./$(notdir $(lastword $(abspath .)))
+TEST_BIN := ./test_tm
 
 EXT_H    := h
 EXT_HPP  := h hh hpp hxx h++
@@ -27,17 +28,22 @@ LDLIBS   := -ldl -lpthread
 LIB_DIRS := $(filter-out ../include/ ../grading/ ../playground/ ../template/ ../sync-examples/,$(filter-out $(wildcard ../*),$(wildcard ../*/)))
 LIB_SOS  := $(patsubst %/,%.so,$(filter-out ../reference/,$(LIB_DIRS)))
 
-.PHONY: build build-libs clean clean-libs run
+.PHONY: build build-libs clean clean-libs run test run-test
 
 build: $(BIN)
 build-libs:
 	@$(foreach DIR,$(LIB_DIRS),make -C $(DIR) build; )
 clean:
-	$(RM) $(OBJS) $(BIN)
+	$(RM) $(OBJS) $(BIN) $(TEST_BIN) ../415640/test_tm.o
 clean-libs:
 	@$(foreach DIR,$(LIB_DIRS),make -C $(DIR) clean; )
 run: $(BIN)
 	$(BIN) 453 ../reference.so $(LIB_SOS)
+
+test: $(TEST_BIN)
+
+run-test: $(TEST_BIN)
+	$(TEST_BIN)
 
 define BUILD_C
 %.$(1).o: %.$(1) $$(HDRS_C) Makefile
@@ -53,3 +59,10 @@ $(foreach EXT,$(EXT_CXX),$(eval $(call BUILD_CXX,$(EXT))))
 
 $(BIN): $(OBJS) Makefile
 	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
+
+# Test compilation
+../415640/test_tm.o: ../415640/test_tm.c ../include/test_tm.h $(HDRS_C) Makefile
+	$(CC) $(CCFLAGS) -I../415640 -c -o $@ ../415640/test_tm.c
+
+$(TEST_BIN): ../415640/test_tm.o ../415640.so Makefile
+	$(CC) -o $@ ../415640/test_tm.o -L.. -Wl,-rpath,$(abspath ..) -l:415640.so -lpthread
