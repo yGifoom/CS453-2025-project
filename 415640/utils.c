@@ -5,7 +5,7 @@
 #include <utils.h>
 #include <tx_t.h>
 
-int nested_free_value_dict(void *key, int unused(count), void* *value, void unused(*user)){
+int nested_free_value_dict(void unused(*key), int unused(count), void* *value, void unused(*user)){
     if(*value != NULL){
         free(*value);
     }
@@ -36,7 +36,7 @@ int rm_from_dict(void *key, int unused(count), void* unused(*value), void *user)
 }
 
 // lock up all words in the write set, can fail!
-int lock_write_set(void *key, int unused(count), void* *value, void *user){
+int lock_write_set(void *key, int unused(count), void* *unused(value), void *user){
     region_and_index* ri = (region_and_index*)user;
     version_lock* lock = lock_get_from_pointer(ri->region, key);
     int res_lock = lock_try_acquire(lock);
@@ -49,7 +49,7 @@ int lock_write_set(void *key, int unused(count), void* *value, void *user){
 }
 
 // unlocks write set words until a match with the key in ri->key is found
-int unlock_write_set_until(void *key, int unused(count), void* *value, void *user){
+int unlock_write_set_until(void *key, int unused(count), void* *unused(value), void *user){
     region_and_index* ri = (region_and_index*)user;
 
     if (ri->key == key) return 1; // if there is a stopping key release until a match is found
@@ -65,7 +65,7 @@ int validate_reading_set(void *key, int unused(count), void* *unused(value), voi
     region_and_index* ri = (region_and_index*)user;
     
     version_lock* lock = lock_get_from_pointer(ri->region, key);
-    bool res_check = lock_check(lock, ((transaction_t*)ri->key)->read_version);
+    int res_check = lock_check(lock, ((transaction_t*)ri->key)->read_version);
 
     if(!res_check){
         ri->key = NULL;
@@ -84,7 +84,7 @@ int write_writing_set(void *key, int unused(count), void* *value, void *user){
 }
 
 // updates all locks from writing set and unlocks them
-int update_locks_writing_set(void *key, int unused(count), void* *value, void *user){
+int update_locks_writing_set(void *key, int unused(count), void* *unused(value), void *user){
     region_and_index* ri = (region_and_index*)user;
     
     version_lock* lock = lock_get_from_pointer(ri->region, key);
@@ -132,13 +132,4 @@ version_lock* lock_get_from_pointer(shared_rgn* shared, void* ptr){
     uint32_t lock_array_idx = hash_pointer(ptr);
 
     return &shared->locks[lock_array_idx % LOCK_ARRAY_SIZE];
-}
-
-validate_reading_set(shared_rgn* shared_region, transaction_t* transaction){
-
-}
-
-
-commit_writing_set(shared_rgn* shared_region, transaction_t* transaction, int wv){
-
 }
