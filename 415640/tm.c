@@ -21,17 +21,19 @@
 #endif
 
 // External headers
-
+#include "stdio.h"
 // Internal headers
 #include <tm.h>
-#include <utils.h>          // nested free, add/rm_from_dict
+#include <utils.h>          // nested free, add/rm_from_dict, get_lock_pointer
 #include <tx_t.h>           // transaction struct
 #include <string.h>         // (memset)
 #include <shared_t.h>       // shared memory region
 #include <version_types.h>  // global and lock versioning
-#include <dict.h>           // read/write-set
+#include <dict.h>           // alloc/free-set
+#include <ll.h>             // segment and read/write set
 #include "macros.h"
-#include "stdio.h"
+#include "params.h"
+
 
 /** Create (i.e. allocate + init) a new shared memory region, with one first non-free-able allocated segment of the requested size and alignment.
  * @param size  Size of the first shared segment of memory to allocate (in bytes), must be a positive multiple of the alignment
@@ -47,11 +49,19 @@ shared_t tm_create(size_t size, size_t align) {
         return invalid_shared;
     }
 
+
+    // make linked list for segments
+    ll_t* segments = malloc(sizeof(ll_t));
+    if(!ll_init(segments)){
+        return invalid_shared;
+    }
+
     // creation of segment
     void* first_segment;
     int res_mem_align = posix_memalign(&first_segment, align, size);
 
     if (res_mem_align != 0){
+        free(segments);
         return invalid_shared;
     }
     memset(first_segment, 0, size);
@@ -59,33 +69,29 @@ shared_t tm_create(size_t size, size_t align) {
     shared_rgn* shared_region = malloc(sizeof(shared_rgn));
     if (shared_region == NULL){
         free(first_segment);
+        free(segments);
         return invalid_shared;
     }
+    
+
+    version_lock* locks = malloc(sizeof(version_lock)*LOCK_ARRAY_SIZE);
+    if (locks == NULL){
+        free(shared_region);
+        free(first_segment);
+        free(segments);
+        return invalid_shared;
+    }
+    memset(locks, 0, sizeof(version_lock)*LOCK_ARRAY_SIZE);
+    ll_append(segments, first_segment);
+
 
     shared_region->global_version = 0;
     shared_region->start = first_segment;
     shared_region->size = size;
     shared_region->align = align;
 
-    // add to region the first segment
-    struct dictionary* segments_dict = dic_new(0);
-    dic_add(segments_dict, first_segment, 8);
-
-    // make lock per word
-    version_lock* segment_locks = malloc(sizeof(version_lock) * (size/align));
-    if(segment_locks == NULL){
-        free(first_segment);
-        free(shared_region);
-        return invalid_shared;
-    }
-
-    for(size_t i = 0; i<size/align; i++){
-        segment_locks[i] = 0;
-    }
-    *segments_dict->value = segment_locks;
-
-    shared_region->segments = segments_dict;
-    shared_region->segment_guard = 0;
+    shared_region->segments = segments;
+    shared_region->locks = locks;
     
     return shared_region;
 }
@@ -97,8 +103,8 @@ void tm_destroy(shared_t shared) {
     shared_rgn* shared_region = (shared_rgn*)shared;
 
     // free each segment + each lock array + destroy dict itself
-    dic_nested_destroy(shared_region->segments);
-
+    ll_destroy_nested(shared_region->segments, free);
+    free(shared_region->locks);
     free(shared_region);
 
     return;
@@ -148,8 +154,8 @@ tx_t tm_begin(shared_t shared, bool is_ro) {
     tx->read_set = dic_new(0);
     if(!is_ro){ // if read only accessing these sets is undefined
         tx->write_set = dic_new(0);
-        tx->alloc_set = dic_new(0);
-        tx->free_set = dic_new(0);
+        tx->alloc_set = malloc(sizeof(struct ll));
+        ll_init(tx->alloc_set);
     }
 
     return (tx_t)tx;
@@ -165,23 +171,43 @@ bool tm_end(shared_t shared, tx_t tx) {
     transaction_t* transaction = (transaction_t*)tx;
 
     if(transaction->read_only){
-
-    }else{
-        // fetch and increment global counter
-        int unused(wv) = atomic_fetch_add(&shared_region->global_version, 1);
-
-        // TODO: read/write check following TL2
-        lock_acquire(&shared_region->segment_guard);
-        printf("CRITICAL SECTION ENTER\n");fflush(stdout);
-        // add allocs
-        dic_forEach(transaction->alloc_set, add_from_dict, shared_region->segments);
-
-        // remove frees
-        dic_forEach(transaction->free_set, rm_from_dict, shared_region->segments);
-        
-        printf("CRITICAL SECTION EXIT\n");fflush(stdout);
-        lock_release(&shared_region->segment_guard);
+        tx_destroy(transaction, true);
+        return true;
     }
+
+    // creation of support struct
+    region_and_index* ri = malloc(sizeof(region_and_index));
+    ri->region = shared_region;
+    ri->key = NULL;
+
+    // lock the write set 
+    dic_forEach(transaction->write_set, lock_write_set, ri);
+
+    // rollback in case locks were already acquired
+    if(ri->key != NULL){
+        dic_forEach(transaction->write_set, unlock_write_set_until, ri);
+        tx_destroy(transaction, false);
+        return false;
+    }
+    // fetch and increment global counter    
+    transaction->write_version = atomic_fetch_add(&shared_region->global_version, 1);
+
+    ri->key = transaction; // passing transaction into ri to supply rv/wv
+    if(transaction->write_version != transaction->read_version - 1){
+
+        // validating reading set
+        dic_forEach(transaction->read_set, validate_reading_set, ri);
+        if(ri->key == NULL){
+            dic_forEach(transaction->write_set, unlock_write_set_until, ri);
+            tx_destroy(transaction, false);
+            return false;
+        }
+    }
+
+    dic_forEach(transaction->write_set, write_writing_set, ri);         // write values 
+    dic_forEach(transaction->write_set, update_locks_writing_set, ri);  // and releases all held locks
+
+    ll_concat_safe(shared_region->segments, transaction->alloc_set);
     
     tx_destroy(transaction, true);
     return true;
@@ -195,9 +221,39 @@ bool tm_end(shared_t shared, tx_t tx) {
  * @param target Target start address (in a private region)
  * @return Whether the whole transaction can continue
 **/
-bool tm_read(shared_t unused(shared), tx_t unused(tx), void const* unused(source), size_t unused(size), void* unused(target)) {
-    // TODO: tm_read(shared_t, tx_t, void const*, size_t, void*)
-    return false;
+bool tm_read(shared_t shared, tx_t tx, void const* source, size_t size, void* target) {
+    shared_rgn* shared_region = (shared_rgn*)shared;
+    transaction_t* transaction = (transaction_t*)tx;
+
+    size_t word_size = shared_region->align;
+
+    for(size_t i = 0; i < size/word_size; i ++){
+        void* current_source_word = source+i*word_size;
+        void* current_target_word = target+i*word_size;
+        version_lock* current_version_lock = lock_get_from_pointer((shared_rgn*)shared, current_source_word);
+
+        if(!lock_check(current_version_lock, transaction->read_version)){
+            tx_destroy(transaction, false);
+            return false;
+        }
+
+        if(!transaction->read_only){
+            dic_add(transaction->read_set, current_source_word, 8);
+            if(dic_find(transaction->write_set, current_source_word, 8)){
+                current_source_word = transaction->write_set->value;
+            }
+        }
+
+        if(!lock_check(current_version_lock, transaction->read_version)){
+            tx_destroy(transaction, false);
+            return false;
+        }
+
+        memcpy(current_target_word, current_source_word, word_size);
+
+        return true;
+
+    }
 }
 
 /** [thread-safe] Write operation in the given transaction, source in a private region and target in the shared region.
@@ -208,9 +264,27 @@ bool tm_read(shared_t unused(shared), tx_t unused(tx), void const* unused(source
  * @param target Target start address (in the shared region)
  * @return Whether the whole transaction can continue
 **/
-bool tm_write(shared_t unused(shared), tx_t unused(tx), void const* unused(source), size_t unused(size), void* unused(target)) {
-    // TODO: tm_write(shared_t, tx_t, void const*, size_t, void*)
-    return false;
+bool tm_write(shared_t shared, tx_t tx, void const* source, size_t size, void* target) {
+    size_t word_size = tm_align(shared);
+    if(size % word_size != 0){
+        return false;
+    }
+    transaction_t* transaction = (transaction_t*)tx;
+    
+    void* target_word = target;
+
+    for(size_t i = 0; i < size; i+=word_size){
+        void* cpy_of_write = malloc(word_size);
+        memcpy(cpy_of_write, source + i, word_size);
+        
+        if (unlikely(dic_add(transaction->write_set, target_word + i, 8) == 1)){
+            tx_destroy(transaction, false);
+            return false;
+        };
+        transaction->write_set->value = cpy_of_write; // entries are always going to be of size align
+    }
+    
+    return true;
 }
 
 /** [thread-safe] Memory allocation in the given transaction.
@@ -223,6 +297,7 @@ bool tm_write(shared_t unused(shared), tx_t unused(tx), void const* unused(sourc
 alloc_t tm_alloc(shared_t shared, tx_t tx, size_t size, void** target) {
     shared_rgn* shared_region = (shared_rgn*)shared;
     transaction_t* transaction = (transaction_t*)tx;
+
     if(target == NULL || transaction == NULL){
         return nomem_alloc;
     }
@@ -232,6 +307,8 @@ alloc_t tm_alloc(shared_t shared, tx_t tx, size_t size, void** target) {
     if (size % align != 0 || (size >> 48) > 0){
         return nomem_alloc;
     }
+
+    // allocate memory eagerly
     int res_memalign = posix_memalign(target, align, size);
     if(res_memalign != 0 || *target == NULL){
         return nomem_alloc;
@@ -239,21 +316,7 @@ alloc_t tm_alloc(shared_t shared, tx_t tx, size_t size, void** target) {
     memset(*target, 0, size);
 
     // bookeep in transaction
-    dic_add(transaction->alloc_set, *target, 8);
-
-    // make lock per word
-    version_lock* segment_locks = malloc(sizeof(version_lock) * (size/align));
-    if(segment_locks == NULL){
-        free(target);
-        *transaction->alloc_set->value = NULL;
-        return nomem_alloc;
-    }
-
-    for(size_t i = 0; i<size/align; i++){
-        segment_locks[i] = 0; // maybe can do this with memset
-    }
-    *transaction->alloc_set->value = segment_locks;
-
+    ll_append(transaction->alloc_set, *target);
 
     return success_alloc;
 }
@@ -264,24 +327,6 @@ alloc_t tm_alloc(shared_t shared, tx_t tx, size_t size, void** target) {
  * @param target Address of the first byte of the previously allocated segment to deallocate
  * @return Whether the whole transaction can continue
 **/
-bool tm_free(shared_t shared, tx_t tx, void* target) {
-    shared_rgn* shared_region = (shared_rgn*)shared;
-    transaction_t* transaction = (transaction_t*)tx;
-
-    // trying to deallocate the first segment?
-    if(target == shared_region->start){
-        return false;
-    }
-    
-    if(dic_find(transaction->alloc_set, target, 8) == 1){
-        // free a segment allocd earlier by the transaction
-        dic_add(transaction->alloc_set, target, 8);
-        free(*transaction->alloc_set->value);
-        *transaction->alloc_set->value = NULL; 
-    }else{
-        dic_add(transaction->free_set, target, 8);
-        *transaction->free_set->value = NULL;
-    }
-
+bool tm_free(shared_t unused(shared), tx_t unused(tx), void* unused(target)) {
     return true;
 }

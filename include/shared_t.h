@@ -1,10 +1,13 @@
 #pragma once
 
 #include "version_types.h"
-#include "dict.h"
+#include "ll.h"
 
 
-typedef void* segment;
+typedef struct {
+    version_lock* lock_region;
+    void* data_region;
+}segment;
 
 typedef struct {
     global_counter global_version;
@@ -13,6 +16,6 @@ typedef struct {
     size_t size;
     size_t align;
 
-    struct dictionary* segments;
-    version_lock segment_guard; // when adding or deleting guard makes thread safe
+    version_lock* locks;
+    struct ll* segments;
 } shared_rgn; // The type of a shared memory region
