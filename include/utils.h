@@ -11,12 +11,12 @@ typedef struct{
     transaction_t* transaction;
     void* key;
 }region_and_index;
-
-int lock_write_set(void *key, int count, void* *value, void *user);
-int unlock_write_set_until(void *key, int count, void* *value, void *user);
+int unique_lock_create(void *key, int count, void* *value, void *user);
+int lock_unique_lock_set(void *key, int count, void* *value, void *user);
+int unlock_unique_lock_set_until(void *key, int count, void* *value, void *user);
 int validate_reading_set(void *key, int count, void* *value, void *user);
 int write_writing_set(void *key, int count, void* *value, void *user);
-int update_locks_writing_set(void *key, int count, void* *value, void *user);
+int update_unique_lock_set(void *key, int count, void* *value, void *user);
 
 
 int nested_free_value_dict(void *key, int count, void* *value, void *user);

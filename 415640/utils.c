@@ -37,14 +37,25 @@ int rm_from_dict(void *key, int unused(count), void* unused(*value), void *user)
     return 1;
 }
 
-// lock up all words in the write set, can fail!
-int lock_write_set(void *key, int unused(count), void* *unused(value), void *user){
+int unique_lock_create(void *key, int unused(count), void* *unused(value), void *user){
     region_and_index* ri = (region_and_index*)user;
+    struct dictionary* unique_lock_set = ri->key;
     version_lock* lock = lock_get_from_pointer(ri->region, key);
+
+    dic_add(unique_lock_set, lock, 8);
+
+    return 1;
+}
+
+
+// lock up all words in the write set, can fail!
+int lock_unique_lock_set(void *key, int unused(count), void* *unused(value), void *user){
+    region_and_index* ri = (region_and_index*)user;
+    version_lock* lock = key;
     int res_lock = lock_try_acquire(lock);
     
     if(!res_lock){
-        ri->key = key;
+        ri->key = lock;
         //printf("LOCK_WRITE_SET: failed lock on %p\n", lock);fflush(stdout);
         return res_lock;
     }
@@ -53,12 +64,12 @@ int lock_write_set(void *key, int unused(count), void* *unused(value), void *use
 }
 
 // unlocks write set words until a match with the key in ri->key is found
-int unlock_write_set_until(void *key, int unused(count), void* *unused(value), void *user){
+int unlock_unique_lock_set_until(void *key, int unused(count), void* *unused(value), void *user){
     region_and_index* ri = (region_and_index*)user;
-
-    if (ri->key == key) return 0; // if there is a stopping key release until a match is found
+    version_lock* lock = key;
+    
+    if (ri->key == lock) return 0; // if there is a stopping key release until a match is found
         
-    version_lock* lock = lock_get_from_pointer(ri->region, key);
     lock_release(lock);
 
     return 1;
@@ -104,10 +115,10 @@ int write_writing_set(void *key, int unused(count), void* *value, void *user){
 }
 
 // updates all locks from writing set and unlocks them
-int update_locks_writing_set(void *key, int unused(count), void* *unused(value), void *user){
+int update_unique_lock_set(void *key, int unused(count), void* *unused(value), void *user){
     region_and_index* ri = (region_and_index*)user;
     
-    version_lock* lock = lock_get_from_pointer(ri->region, key);
+    version_lock* lock = key;
     
     lock_update_and_release(lock, ri->transaction->write_version);
 

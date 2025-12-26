@@ -42,7 +42,7 @@
 **/
 shared_t tm_create(size_t size, size_t align) {
 
-    if (!((align > 0) && !(align & (align - 1)))){
+    if (unlikely(!((align > 0) && !(align & (align - 1))))){
         return invalid_shared;
     }
     if (size % align != 0 || (size >> 48) > 0){
@@ -52,7 +52,7 @@ shared_t tm_create(size_t size, size_t align) {
 
     // make linked list for segments
     ll_t* segments = malloc(sizeof(ll_t));
-    if(!ll_init(segments)){
+    if(unlikely(!ll_init(segments))){
         return invalid_shared;
     }
 
@@ -60,14 +60,14 @@ shared_t tm_create(size_t size, size_t align) {
     void* first_segment;
     int res_mem_align = posix_memalign(&first_segment, align, size);
 
-    if (res_mem_align != 0){
+    if (unlikely(res_mem_align != 0)){
         free(segments);
         return invalid_shared;
     }
     memset(first_segment, 0, size);
 
     shared_rgn* shared_region = malloc(sizeof(shared_rgn));
-    if (shared_region == NULL){
+    if (unlikely(shared_region == NULL)){
         free(first_segment);
         free(segments);
         return invalid_shared;
@@ -75,7 +75,7 @@ shared_t tm_create(size_t size, size_t align) {
     
 
     version_lock* locks = malloc(sizeof(version_lock)*LOCK_ARRAY_SIZE);
-    if (locks == NULL){
+    if (unlikely(locks == NULL)){
         free(shared_region);
         free(first_segment);
         free(segments);
@@ -144,7 +144,7 @@ tx_t tm_begin(shared_t shared, bool is_ro) {
     shared_rgn* shared_region = (shared_rgn*)shared;
 
     transaction_t* tx = malloc(sizeof(transaction_t));
-    if (tx == NULL){
+    if (unlikely(tx == NULL)){
         return invalid_tx;
     }
 
@@ -176,7 +176,7 @@ bool tm_end(shared_t shared, tx_t tx) {
 
     // creation of support struct
     region_and_index* ri = malloc(sizeof(region_and_index));
-    if (ri == NULL){
+    if (unlikely(ri == NULL)){
         tx_destroy(transaction, false);
         return false;
     }
@@ -185,12 +185,20 @@ bool tm_end(shared_t shared, tx_t tx) {
     ri->key = NULL;
 
     // lock the write set 
-    dic_forEach(transaction->write_set, lock_write_set, ri);
+
+    // create a dict with only only unique locks
+    struct dictionary* unique_locks = dic_new(0);
+    ri->key = unique_locks;
+    dic_forEach(transaction->write_set, unique_lock_create, ri);
+
+    ri->key = NULL;
+    dic_forEach(unique_locks, lock_unique_lock_set, ri);
 
     // rollback in case locks were already acquired
     if(ri->key != NULL){
         //printf("TM_END: TRANSACTION FAILED, failed to acquire all locks write set\n");fflush(stdout);
-        dic_forEach(transaction->write_set, unlock_write_set_until, ri);
+        dic_forEach(unique_locks, unlock_unique_lock_set_until, ri);
+        dic_delete(unique_locks);
         free(ri);
         tx_destroy(transaction, false);
         return false;
@@ -208,7 +216,8 @@ bool tm_end(shared_t shared, tx_t tx) {
 
         if(ri->transaction == NULL){
             //printf("TM_END: TRANSACTION FAILED, failed to validate reading set\n");fflush(stdout);
-            dic_forEach(transaction->write_set, unlock_write_set_until, ri);
+            dic_forEach(unique_locks, unlock_unique_lock_set_until, ri);
+            dic_delete(unique_locks);
             free(ri);
             tx_destroy(transaction, false);
             return false;
@@ -216,10 +225,11 @@ bool tm_end(shared_t shared, tx_t tx) {
     }
 
     dic_forEach(transaction->write_set, write_writing_set, ri);         // write values 
-    dic_forEach(transaction->write_set, update_locks_writing_set, ri);  // and releases all held locks
+    dic_forEach(unique_locks, update_unique_lock_set, ri);  // and releases all held locks
 
     ll_concat_safe(shared_region->segments, transaction->alloc_set);
     
+    dic_delete(unique_locks);
     free(ri);
     tx_destroy(transaction, true);
     return true;
@@ -285,7 +295,7 @@ bool tm_write(shared_t shared, tx_t tx, void const* source, size_t size, void* t
     size_t word_size = tm_align(shared);
     transaction_t* transaction = (transaction_t*)tx;
 
-    if(size % word_size != 0){
+    if(unlikely(size % word_size != 0)){
         tx_destroy(transaction, false);
         return false;
     }
@@ -316,19 +326,19 @@ alloc_t tm_alloc(shared_t shared, tx_t tx, size_t size, void** target) {
     shared_rgn* shared_region = (shared_rgn*)shared;
     transaction_t* transaction = (transaction_t*)tx;
 
-    if(target == NULL || transaction == NULL){
+    if(unlikely(target == NULL || transaction == NULL)){
         return nomem_alloc;
     }
     size_t align = shared_region->align;
 
     // is size acceptable?
-    if (size % align != 0 || (size >> 48) > 0){
+    if (unlikely(size % align != 0 || (size >> 48) > 0)){
         return nomem_alloc;
     }
 
     // allocate memory eagerly
     int res_memalign = posix_memalign(target, align, size);
-    if(res_memalign != 0 || *target == NULL){
+    if(unlikely(res_memalign != 0 || *target == NULL)){
         return nomem_alloc;
     }
     memset(*target, 0, size);

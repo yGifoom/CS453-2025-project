@@ -35,8 +35,8 @@ struct dictionary* dic_new(int initial_size) {
 	dic->length = initial_size;
 	dic->count = 0;
 	dic->table = calloc(sizeof(struct keynode*), initial_size);
-	dic->growth_treshold = 2.0;
-	dic->growth_factor = 10;
+	dic->growth_treshold = 0.5;
+	dic->growth_factor = 20;
 	return dic;
 }
 
