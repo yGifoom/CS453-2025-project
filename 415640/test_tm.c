@@ -33,27 +33,32 @@ void* short_ro_transaction(void* arg) {
             void* counter_addr = (char*)tm_start(args->shared) + j * sizeof(long);
             if (!tm_read(args->shared, tx, counter_addr, sizeof(long), &counters[j])) {
                 read_success = false;
+                printf("[Thread %d] RO transaction %d aborted during read, retrying\n", args->thread_id, i);
                 break;
             }
         }
         
-        if (read_success) {
-            // Verify all counters are non-negative (consistency check)
-            for (int j = 0; j < NUM_COUNTERS; j++) {
-                if (counters[j] < 0) {
-                    fprintf(stderr, "[Thread %d] FATAL: Consistency violation: counter[%d] = %ld\n", 
-                            args->thread_id, j, counters[j]);
-                    fprintf(stderr, "Test failed - shutting down\n");
-                    exit(1);
-                }
+        if (!read_success) {
+            i--;
+            continue;
+        }
+        
+        // Verify all counters are non-negative (consistency check)
+        for (int j = 0; j < NUM_COUNTERS; j++) {
+            if (counters[j] < 0) {
+                fprintf(stderr, "[Thread %d] FATAL: Consistency violation: counter[%d] = %ld\n", 
+                        args->thread_id, j, counters[j]);
+                fprintf(stderr, "Test failed - shutting down\n");
+                exit(1);
             }
         }
         
         bool success = tm_end(args->shared, tx);
         if (!success) {
-            // Transaction aborted and destroyed, retry with new transaction
-            printf("[Thread %d] RO transaction %d aborted, retrying\n", args->thread_id, i);
+            printf("[Thread %d] RO transaction %d aborted at commit, retrying\n", args->thread_id, i);
             i--;
+        } else {
+            args->counter_array[args->thread_id]++;
         }
     }
     
@@ -84,8 +89,7 @@ void* short_rw_transaction(void* arg) {
         
         long value;
         if (!tm_read(args->shared, tx, counter_addr, sizeof(long), &value)) {
-            fprintf(stderr, "[Thread %d] RW transaction %d: read failed\n", args->thread_id, i);
-            tm_end(args->shared, tx);
+            fprintf(stderr, "[Thread %d] RW transaction %d: read failed (transaction auto-destroyed)\n", args->thread_id, i);
             i--;
             continue;
         }
@@ -94,8 +98,7 @@ void* short_rw_transaction(void* arg) {
         value++;
         
         if (!tm_write(args->shared, tx, &value, sizeof(long), counter_addr)) {
-            fprintf(stderr, "[Thread %d] RW transaction %d: write failed\n", args->thread_id, i);
-            tm_end(args->shared, tx);
+            fprintf(stderr, "[Thread %d] RW transaction %d: write failed (transaction auto-destroyed)\n", args->thread_id, i);
             i--;
             continue;
         }
@@ -179,7 +182,6 @@ void* long_alloc_transaction(void* arg) {
         }
         
         if (!transaction_valid) {
-            tm_end(args->shared, tx);
             i--;
             continue;
         }
@@ -231,9 +233,8 @@ void* mixed_transaction(void* arg) {
             }
             
             if (!tm_write(args->shared, tx, data, sizeof(data), new_segment)) {
-                fprintf(stderr, "[Thread %d] Mixed transaction %d: write failed\n", 
+                fprintf(stderr, "[Thread %d] Mixed transaction %d: write failed (transaction auto-destroyed)\n", 
                         args->thread_id, i);
-                tm_end(args->shared, tx);
                 i--;
                 continue;
             }
@@ -241,9 +242,8 @@ void* mixed_transaction(void* arg) {
             // Read it back to verify (consistency)
             long read_data[4];
             if (!tm_read(args->shared, tx, new_segment, sizeof(read_data), read_data)) {
-                fprintf(stderr, "[Thread %d] Mixed transaction %d: read failed\n", 
+                fprintf(stderr, "[Thread %d] Mixed transaction %d: read failed (transaction auto-destroyed)\n", 
                         args->thread_id, i);
-                tm_end(args->shared, tx);
                 i--;
                 continue;
             }
@@ -375,7 +375,6 @@ void* very_long_transaction(void* arg) {
         }
         
         if (!transaction_valid) {
-            tm_end(args->shared, tx);
             printf("[Thread %d] Very long transaction %d failed mid-transaction, retrying\n", 
                    args->thread_id, i);
             i--;
@@ -434,7 +433,6 @@ int main(void) {
         long zero = 0;
         if (!tm_write(shared, init_tx, &zero, sizeof(long), counter_addr)) {
             fprintf(stderr, "Failed to initialize counter %d\n", i);
-            tm_end(shared, init_tx);
             tm_destroy(shared);
             return 1;
         }

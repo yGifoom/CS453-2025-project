@@ -11,7 +11,7 @@ int nested_free_value_dict(void unused(*key), int unused(count), void* *value, v
     if(*value != NULL){
         free(*value);
     }
-    return 0;
+    return 1;
 }
 
 
@@ -22,7 +22,7 @@ int add_from_dict(void *key, int unused(count), void* *value, void *user){
     if(res_add != 1){
         *dict->value = *value;
     }
-    return 0;
+    return 1;
 }
 
 int rm_from_dict(void *key, int unused(count), void* unused(*value), void *user){
@@ -34,7 +34,7 @@ int rm_from_dict(void *key, int unused(count), void* unused(*value), void *user)
         free(key);
         *dict->value = NULL;
     }
-    return 0;
+    return 1;
 }
 
 // lock up all words in the write set, can fail!
@@ -45,23 +45,23 @@ int lock_write_set(void *key, int unused(count), void* *unused(value), void *use
     
     if(!res_lock){
         ri->key = key;
-        printf("LOCK_WRITE_SET: failed lock on %p\n", lock);fflush(stdout);
-        return 1;
+        //printf("LOCK_WRITE_SET: failed lock on %p\n", lock);fflush(stdout);
+        return res_lock;
     }
-    printf("LOCK_WRITE_SET: locked %p\n", lock);fflush(stdout);
-    return 0;
+    //printf("LOCK_WRITE_SET: locked %p\n", lock);fflush(stdout);
+    return res_lock;
 }
 
 // unlocks write set words until a match with the key in ri->key is found
 int unlock_write_set_until(void *key, int unused(count), void* *unused(value), void *user){
     region_and_index* ri = (region_and_index*)user;
 
-    if (ri->key == key) return 1; // if there is a stopping key release until a match is found
+    if (ri->key == key) return 0; // if there is a stopping key release until a match is found
         
     version_lock* lock = lock_get_from_pointer(ri->region, key);
     lock_release(lock);
 
-    return 0;
+    return 1;
 }
 
 // in the ri the writing set is passed. all the keys that appear in the writing and reading set 
@@ -83,22 +83,24 @@ int validate_reading_set(void *key, int unused(count), void* *unused(value), voi
     }
 
     if (res == false){
-        printf("VALIDATE READING SET: failed on key:%p, res:%d, with lock at:%p with value:%d and rv:%d\n", key, res, lock, *lock, ri->transaction->read_version);fflush(stdout);
+        //printf("VALIDATE READING SET: failed on key:%p, res:%d, with lock at:%p with value:%d and rv:%d\n", key, res, lock, *lock, ri->transaction->read_version);fflush(stdout);
         ri->transaction = NULL;
-        return 1;
+        return 0;
     }
-    printf("VALIDATE READING SET: ok on key:%p, res:%d, with lock:%d and rv:%d\n", key, res, *lock, ri->transaction->read_version);fflush(stdout);
+    //printf("VALIDATE READING SET: ok on key:%p, res:%d, with lock:%d and rv:%d\n", key, res, *lock, ri->transaction->read_version);fflush(stdout);
 
-    return 0;
+    return 1;
 }
 
 // write data in shared mem
 int write_writing_set(void *key, int unused(count), void* *value, void *user){
     region_and_index* ri = (region_and_index*)user;
     
-    memcpy(key, value, ri->region->align);
+    // value is a void** pointing to the dictionary's value slot
+    // *value is the void* pointer to the allocated buffer with actual data
+    memcpy(key, *value, ri->region->align);
 
-    return 0;
+    return 1;
 }
 
 // updates all locks from writing set and unlocks them
@@ -109,7 +111,7 @@ int update_locks_writing_set(void *key, int unused(count), void* *unused(value),
     
     lock_update_and_release(lock, ri->transaction->write_version);
 
-    return 0;
+    return 1;
 }
 
 
@@ -133,7 +135,7 @@ void tx_destroy(transaction_t* tx, bool committed){
 }
 
 static inline uint32_t hash_pointer(void *ptr) {
-	//printf("key is %p\n", ptr);fflush(stdout);
+	////printf("key is %p\n", ptr);fflush(stdout);
 	// Shift out alignment bits to get meaningful variation
 	uintptr_t val = (uintptr_t)ptr >> 3;
 	// Mix the bits to distribute values better in smaller ranges
@@ -142,7 +144,7 @@ static inline uint32_t hash_pointer(void *ptr) {
 	val ^= val >> 13;
 	val *= 0xc2b2ae35;
 	val ^= val >> 16;
-	//printf("key %p hashed to value %u\n", ptr, (uint32_t)val);fflush(stdout);
+	////printf("key %p hashed to value %u\n", ptr, (uint32_t)val);fflush(stdout);
 	return (uint32_t)val;
 }
 

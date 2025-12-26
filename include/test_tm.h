@@ -6,7 +6,7 @@
 
 // Test configuration
 #define NUM_THREADS 8
-#define NUM_TRANSACTIONS_PER_THREAD 100
+#define NUM_TRANSACTIONS_PER_THREAD 100 
 #define SHARED_SIZE 4096
 #define ALIGN 8
 #define NUM_COUNTERS 16

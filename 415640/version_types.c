@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 bool lock_try_acquire(version_lock* lk){
-    printf("try_lock_acquire pointer:%p\n", lk);
+    //printf("try_lock_acquire pointer:%p with val:%d\n", lk, *lk);
     int vl = atomic_load(lk);
 
     if (vl & 0x1)
@@ -50,7 +50,8 @@ bool lock_check_version(version_lock* lk, int own_vl){
 }
 
 void lock_update_and_release(version_lock* lk, int updated_version){
-    atomic_store(lk, (updated_version << 1)); // inserts automatically a 0 to reset lock
+    // updated_version is already in lock format (bit 0 = 0), don't shift again
+    atomic_store(lk, updated_version);
 }
 
 
