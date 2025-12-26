@@ -8,6 +8,7 @@
 // struct to communicate need for rollback operation
 typedef struct{
     shared_rgn* region;
+    transaction_t* transaction;
     void* key;
 }region_and_index;
 

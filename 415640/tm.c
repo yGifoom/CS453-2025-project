@@ -81,6 +81,7 @@ shared_t tm_create(size_t size, size_t align) {
         free(segments);
         return invalid_shared;
     }
+    // initialize locks to 0
     memset(locks, 0, sizeof(version_lock)*LOCK_ARRAY_SIZE);
     ll_append(segments, first_segment);
 
@@ -152,11 +153,9 @@ tx_t tm_begin(shared_t shared, bool is_ro) {
 
     tx->read_only = is_ro;
     tx->read_set = dic_new(0);
-    if(!is_ro){ // if read only accessing these sets is undefined
-        tx->write_set = dic_new(0);
-        tx->alloc_set = malloc(sizeof(struct ll));
-        ll_init(tx->alloc_set);
-    }
+    tx->write_set = dic_new(0);
+    tx->alloc_set = malloc(sizeof(struct ll));
+    ll_init(tx->alloc_set);
 
     return (tx_t)tx;
 }
@@ -177,7 +176,12 @@ bool tm_end(shared_t shared, tx_t tx) {
 
     // creation of support struct
     region_and_index* ri = malloc(sizeof(region_and_index));
+    if (ri == NULL){
+        tx_destroy(transaction, false);
+        return false;
+    }
     ri->region = shared_region;
+    ri->transaction = transaction;
     ri->key = NULL;
 
     // lock the write set 
@@ -185,20 +189,27 @@ bool tm_end(shared_t shared, tx_t tx) {
 
     // rollback in case locks were already acquired
     if(ri->key != NULL){
+        printf("TM_END: TRANSACTION FAILED, failed to acquire all locks write set\n");fflush(stdout);
         dic_forEach(transaction->write_set, unlock_write_set_until, ri);
+        free(ri);
         tx_destroy(transaction, false);
         return false;
     }
     // fetch and increment global counter    
-    transaction->write_version = atomic_fetch_add(&shared_region->global_version, 1);
+    transaction->write_version = atomic_fetch_add(&shared_region->global_version, 1) + 1;
 
-    ri->key = transaction; // passing transaction into ri to supply rv/wv
-    if(transaction->write_version != transaction->read_version - 1){
-
+    if(transaction->write_version != transaction->read_version + 1){
+        printf("TM_END: validating writing set: rv:%d, wv:%d\n", transaction->read_version, transaction->write_version);fflush(stdout);
+        
         // validating reading set
+        ri->key = transaction->write_set; // supply write_set to only check version of already locked words
         dic_forEach(transaction->read_set, validate_reading_set, ri);
-        if(ri->key == NULL){
+        ri->key = NULL;
+
+        if(ri->transaction == NULL){
+            printf("TM_END: TRANSACTION FAILED, failed to validate reading set\n");fflush(stdout);
             dic_forEach(transaction->write_set, unlock_write_set_until, ri);
+            free(ri);
             tx_destroy(transaction, false);
             return false;
         }
@@ -209,6 +220,7 @@ bool tm_end(shared_t shared, tx_t tx) {
 
     ll_concat_safe(shared_region->segments, transaction->alloc_set);
     
+    free(ri);
     tx_destroy(transaction, true);
     return true;
 }
@@ -228,7 +240,7 @@ bool tm_read(shared_t shared, tx_t tx, void const* source, size_t size, void* ta
     size_t word_size = shared_region->align;
 
     for(size_t i = 0; i < size/word_size; i ++){
-        void* current_source_word = source+i*word_size;
+        void* current_source_word = (void*)source+i*word_size;
         void* current_target_word = target+i*word_size;
         version_lock* current_version_lock = lock_get_from_pointer((shared_rgn*)shared, current_source_word);
 
@@ -239,8 +251,10 @@ bool tm_read(shared_t shared, tx_t tx, void const* source, size_t size, void* ta
 
         if(!transaction->read_only){
             dic_add(transaction->read_set, current_source_word, 8);
+            //printf("TM_READ: adding to read-set: %p\n", current_source_word);fflush(stdout);
             if(dic_find(transaction->write_set, current_source_word, 8)){
-                current_source_word = transaction->write_set->value;
+                //printf("TM_READ: reading from write-set: %p\n", current_source_word);fflush(stdout);
+                current_source_word = *transaction->write_set->value;
             }
         }
 
@@ -251,9 +265,9 @@ bool tm_read(shared_t shared, tx_t tx, void const* source, size_t size, void* ta
 
         memcpy(current_target_word, current_source_word, word_size);
 
-        return true;
-
     }
+
+    return true;
 }
 
 /** [thread-safe] Write operation in the given transaction, source in a private region and target in the shared region.
@@ -265,23 +279,25 @@ bool tm_read(shared_t shared, tx_t tx, void const* source, size_t size, void* ta
  * @return Whether the whole transaction can continue
 **/
 bool tm_write(shared_t shared, tx_t tx, void const* source, size_t size, void* target) {
+    //printf("TM_WRITE: SANITY: source: %p, with value: %ld, target:%p with value:%ld\n", source, *(long*)source, target, *(long*)target);fflush(stdout);
     size_t word_size = tm_align(shared);
+    transaction_t* transaction = (transaction_t*)tx;
+
     if(size % word_size != 0){
+        tx_destroy(transaction, false);
         return false;
     }
-    transaction_t* transaction = (transaction_t*)tx;
     
-    void* target_word = target;
+    void* starting_target_word = target;
 
     for(size_t i = 0; i < size; i+=word_size){
         void* cpy_of_write = malloc(word_size);
         memcpy(cpy_of_write, source + i, word_size);
         
-        if (unlikely(dic_add(transaction->write_set, target_word + i, 8) == 1)){
-            tx_destroy(transaction, false);
-            return false;
-        };
-        transaction->write_set->value = cpy_of_write; // entries are always going to be of size align
+        printf("TM_WRITE: adding to write-set: %p, with %zuth value: %ld\n", starting_target_word + i, i, *(long*)cpy_of_write);fflush(stdout);
+        int res = dic_add(transaction->write_set, starting_target_word + i, 8);
+        *transaction->write_set->value = cpy_of_write; // entries are always going to be of size align
+        printf("TM_WRITE: adding to write-set: %p with res:%d; %zuth value: %ld\n", starting_target_word + i, res, i, *(long*)cpy_of_write);fflush(stdout);
     }
     
     return true;

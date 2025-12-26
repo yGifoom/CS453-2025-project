@@ -1,7 +1,9 @@
 #include "version_types.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 bool lock_try_acquire(version_lock* lk){
+    printf("try_lock_acquire pointer:%p\n", lk);
     int vl = atomic_load(lk);
 
     if (vl & 0x1)
@@ -33,6 +35,15 @@ bool lock_check(version_lock* lk, int own_vl){
     int vl = atomic_load(lk);
     
     if (vl & 0x1 || (vl >> 1) > (own_vl >> 1)){
+        return false;
+    }
+    return true;
+}
+
+bool lock_check_version(version_lock* lk, int own_vl){
+    int vl = atomic_load(lk);
+    
+    if ((vl >> 1) > (own_vl >> 1)){
         return false;
     }
     return true;

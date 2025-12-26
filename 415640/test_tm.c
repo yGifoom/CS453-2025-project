@@ -6,11 +6,7 @@
 #include <unistd.h>
 #include "test_tm.h"
 #include <tm.h>
-
-#define NUM_THREADS 8
-#define NUM_TRANSACTIONS_PER_THREAD 100
-#define SHARED_SIZE 1024
-#define ALIGN 8
+#include <tx_t.h>
 
 // Short read-only transaction
 void* short_ro_transaction(void* arg) {
@@ -29,13 +25,34 @@ void* short_ro_transaction(void* arg) {
             printf("[Thread %d] RO transaction %d started\n", args->thread_id, i);
         }
         
-        // Simulate some read operations
-        usleep(rand() % 100);
+        // Read multiple counters and verify consistency
+        long counters[NUM_COUNTERS];
+        bool read_success = true;
+        
+        for (int j = 0; j < NUM_COUNTERS; j++) {
+            void* counter_addr = (char*)tm_start(args->shared) + j * sizeof(long);
+            if (!tm_read(args->shared, tx, counter_addr, sizeof(long), &counters[j])) {
+                read_success = false;
+                break;
+            }
+        }
+        
+        if (read_success) {
+            // Verify all counters are non-negative (consistency check)
+            for (int j = 0; j < NUM_COUNTERS; j++) {
+                if (counters[j] < 0) {
+                    fprintf(stderr, "[Thread %d] FATAL: Consistency violation: counter[%d] = %ld\n", 
+                            args->thread_id, j, counters[j]);
+                    fprintf(stderr, "Test failed - shutting down\n");
+                    exit(1);
+                }
+            }
+        }
         
         bool success = tm_end(args->shared, tx);
         if (!success) {
+            // Transaction aborted and destroyed, retry with new transaction
             printf("[Thread %d] RO transaction %d aborted, retrying\n", args->thread_id, i);
-            // Transaction aborted, retry
             i--;
         }
     }
@@ -61,14 +78,34 @@ void* short_rw_transaction(void* arg) {
             printf("[Thread %d] RW transaction %d started\n", args->thread_id, i);
         }
         
-        // Simulate write operations
+        // Read-modify-write on a specific counter (atomicity test)
+        int counter_idx = args->thread_id % NUM_COUNTERS;
+        void* counter_addr = (char*)tm_start(args->shared) + counter_idx * sizeof(long);
+        
+        long value;
+        if (!tm_read(args->shared, tx, counter_addr, sizeof(long), &value)) {
+            fprintf(stderr, "[Thread %d] RW transaction %d: read failed\n", args->thread_id, i);
+            tm_end(args->shared, tx);
+            i--;
+            continue;
+        }
+        
+        // Increment the value
+        value++;
+        
+        if (!tm_write(args->shared, tx, &value, sizeof(long), counter_addr)) {
+            fprintf(stderr, "[Thread %d] RW transaction %d: write failed\n", args->thread_id, i);
+            tm_end(args->shared, tx);
+            i--;
+            continue;
+        }
+        
         args->counter_array[args->thread_id]++;
-        usleep(rand() % 50);
         
         bool success = tm_end(args->shared, tx);
         if (!success) {
+            // Transaction aborted and destroyed, retry with new transaction
             printf("[Thread %d] RW transaction %d aborted, retrying\n", args->thread_id, i);
-            // Transaction aborted, retry
             args->counter_array[args->thread_id]--;
             i--;
         }
@@ -91,36 +128,69 @@ void* long_alloc_transaction(void* arg) {
             continue;
         }
         
-        printf("[Thread %d] Alloc transaction %d: allocating multiple segments\n", args->thread_id, i);
+        printf("[Thread %d] Alloc transaction %d: allocating and writing to segments\n", args->thread_id, i);
         
-        // Allocate multiple segments
+        // Allocate segments and write data to them
         void* segments[5];
         int allocated = 0;
+        bool transaction_valid = true;
+        
         for (int j = 0; j < 5; j++) {
-            alloc_t result = tm_alloc(args->shared, tx, ALIGN * (j + 1), &segments[j]);
+            alloc_t result = tm_alloc(args->shared, tx, ALIGN * (j + 2), &segments[j]);
             if (result == success_alloc) {
+                // Write test data to the allocated segment
+                long test_value = (long)(args->thread_id * 1000 + i * 10 + j);
+                if (!tm_write(args->shared, tx, &test_value, sizeof(long), segments[j])) {
+                    fprintf(stderr, "[Thread %d] Alloc transaction %d: write to segment %d failed\n", 
+                           args->thread_id, i, j);
+                    transaction_valid = false;
+                    break;
+                }
+                
+                // Verify we can read it back (consistency within transaction)
+                long read_value;
+                if (!tm_read(args->shared, tx, segments[j], sizeof(long), &read_value)) {
+                    fprintf(stderr, "[Thread %d] Alloc transaction %d: read from segment %d failed\n", 
+                           args->thread_id, i, j);
+                    transaction_valid = false;
+                    break;
+                }
+                
+                if (read_value != test_value) {
+                    fprintf(stderr, "[Thread %d] FATAL: Consistency error: wrote %ld, read %ld\n", 
+                           args->thread_id, test_value, read_value);
+                    fprintf(stderr, "Test failed - shutting down\n");
+                    exit(1);
+                }
+                
                 allocated++;
-                printf("[Thread %d] Alloc transaction %d: allocated segment %d (%u bytes)\n", 
-                       args->thread_id, i, j, ALIGN * (j + 1));
+                if (j % 2 == 0) {
+                    printf("[Thread %d] Alloc transaction %d: allocated and verified segment %d\n", 
+                           args->thread_id, i, j);
+                }
             } else if (result == nomem_alloc) {
                 printf("[Thread %d] Alloc transaction %d: nomem at segment %d\n", args->thread_id, i, j);
                 break;
             } else {
                 printf("[Thread %d] Alloc transaction %d: abort_alloc at segment %d\n", args->thread_id, i, j);
+                transaction_valid = false;
                 break;
             }
+        }
+        
+        if (!transaction_valid) {
+            tm_end(args->shared, tx);
+            i--;
+            continue;
         }
         
         printf("[Thread %d] Alloc transaction %d: allocated %d segments total\n", 
                args->thread_id, i, allocated);
         
-        // Simulate some work
-        usleep(rand() % 200);
-        
         bool success = tm_end(args->shared, tx);
         if (!success) {
+            // Transaction aborted and destroyed, retry with new transaction
             printf("[Thread %d] Alloc transaction %d aborted, retrying\n", args->thread_id, i);
-            // Transaction aborted, retry
             i--;
         } else {
             printf("[Thread %d] Alloc transaction %d committed successfully\n", args->thread_id, i);
@@ -146,7 +216,7 @@ void* mixed_transaction(void* arg) {
         
         printf("[Thread %d] Mixed transaction %d: allocating segment\n", args->thread_id, i);
         
-        // Allocate a segment
+        // Allocate a segment and write data
         void* new_segment;
         alloc_t alloc_result = tm_alloc(args->shared, tx, ALIGN * 4, &new_segment);
         
@@ -154,8 +224,39 @@ void* mixed_transaction(void* arg) {
             printf("[Thread %d] Mixed transaction %d: allocated segment at %p\n", 
                    args->thread_id, i, new_segment);
             
-            // Simulate work with the segment
-            usleep(rand() % 150);
+            // Write data to the segment
+            long data[4];
+            for (int k = 0; k < 4; k++) {
+                data[k] = (long)(args->thread_id * 100 + i * 10 + k);
+            }
+            
+            if (!tm_write(args->shared, tx, data, sizeof(data), new_segment)) {
+                fprintf(stderr, "[Thread %d] Mixed transaction %d: write failed\n", 
+                        args->thread_id, i);
+                tm_end(args->shared, tx);
+                i--;
+                continue;
+            }
+            
+            // Read it back to verify (consistency)
+            long read_data[4];
+            if (!tm_read(args->shared, tx, new_segment, sizeof(read_data), read_data)) {
+                fprintf(stderr, "[Thread %d] Mixed transaction %d: read failed\n", 
+                        args->thread_id, i);
+                tm_end(args->shared, tx);
+                i--;
+                continue;
+            }
+            
+            // Verify data integrity
+            for (int k = 0; k < 4; k++) {
+                if (read_data[k] != data[k]) {
+                    fprintf(stderr, "[Thread %d] FATAL: Data integrity error at index %d: wrote %ld, read %ld\n", 
+                           args->thread_id, k, data[k], read_data[k]);
+                    fprintf(stderr, "Test failed - shutting down\n");
+                    exit(1);
+                }
+            }
             
             printf("[Thread %d] Mixed transaction %d: freeing segment\n", args->thread_id, i);
             
@@ -174,8 +275,8 @@ void* mixed_transaction(void* arg) {
         
         bool success = tm_end(args->shared, tx);
         if (!success) {
+            // Transaction aborted and destroyed, retry with new transaction
             printf("[Thread %d] Mixed transaction %d aborted, retrying\n", args->thread_id, i);
-            // Transaction aborted, retry
             i--;
         } else {
             printf("[Thread %d] Mixed transaction %d committed\n", args->thread_id, i);
@@ -199,33 +300,97 @@ void* very_long_transaction(void* arg) {
             continue;
         }
         
-        printf("[Thread %d] Very long transaction %d: performing 10 allocations\n", 
+        printf("[Thread %d] Very long transaction %d: performing multiple operations\n", 
                args->thread_id, i);
         
-        // Multiple allocations and operations
-        int successful_allocs = 0;
-        for (int j = 0; j < 10; j++) {
-            void* segment;
-            alloc_t result = tm_alloc(args->shared, tx, ALIGN * 2, &segment);
-            if (result != success_alloc) {
-                printf("[Thread %d] Very long transaction %d: allocation %d failed\n", 
+        // Test atomicity: multiple reads and writes should all succeed or all fail
+        bool transaction_valid = true;
+        int successful_ops = 0;
+        
+        // First, do multiple counter increments
+        for (int j = 0; j < 5; j++) {
+            int counter_idx = (args->thread_id + j) % NUM_COUNTERS;
+            void* counter_addr = (char*)tm_start(args->shared) + counter_idx * sizeof(long);
+            
+            long value;
+            if (!tm_read(args->shared, tx, counter_addr, sizeof(long), &value)) {
+                fprintf(stderr, "[Thread %d] Very long transaction %d: read %d failed\n", 
                        args->thread_id, i, j);
+                transaction_valid = false;
                 break;
             }
-            successful_allocs++;
             
-            usleep(rand() % 50);
-            args->counter_array[args->thread_id]++;
+            value++;
+            
+            if (!tm_write(args->shared, tx, &value, sizeof(long), counter_addr)) {
+                fprintf(stderr, "[Thread %d] Very long transaction %d: write %d failed\n", 
+                       args->thread_id, i, j);
+                transaction_valid = false;
+                break;
+            }
+            
+            successful_ops++;
         }
         
-        printf("[Thread %d] Very long transaction %d: completed %d allocations\n", 
-               args->thread_id, i, successful_allocs);
+        // Then allocate and write to new segments
+        if (transaction_valid) {
+            for (int j = 0; j < 5; j++) {
+                void* segment;
+                alloc_t result = tm_alloc(args->shared, tx, ALIGN * 2, &segment);
+                if (result != success_alloc) {
+                    if (result == nomem_alloc) {
+                        printf("[Thread %d] Very long transaction %d: out of memory at alloc %d\n", 
+                               args->thread_id, i, j);
+                    }
+                    break;
+                }
+                
+                // Write and verify
+                long test_val = (long)(args->thread_id * 10000 + i * 100 + j);
+                if (!tm_write(args->shared, tx, &test_val, sizeof(long), segment)) {
+                    fprintf(stderr, "[Thread %d] Very long transaction %d: write to segment %d failed\n", 
+                           args->thread_id, i, j);
+                    transaction_valid = false;
+                    break;
+                }
+                
+                long check_val;
+                if (!tm_read(args->shared, tx, segment, sizeof(long), &check_val)) {
+                    fprintf(stderr, "[Thread %d] Very long transaction %d: read from segment %d failed\n", 
+                           args->thread_id, i, j);
+                    transaction_valid = false;
+                    break;
+                }
+                
+                if (check_val != test_val) {
+                    fprintf(stderr, "[Thread %d] FATAL: Atomicity violation: wrote %ld, read %ld\n", 
+                           args->thread_id, test_val, check_val);
+                    fprintf(stderr, "Test failed - shutting down\n");
+                    exit(1);
+                }
+                
+                successful_ops++;
+                args->counter_array[args->thread_id]++;
+            }
+        }
+        
+        if (!transaction_valid) {
+            tm_end(args->shared, tx);
+            printf("[Thread %d] Very long transaction %d failed mid-transaction, retrying\n", 
+                   args->thread_id, i);
+            i--;
+            continue;
+        }
+        
+        printf("[Thread %d] Very long transaction %d: completed %d operations\n", 
+               args->thread_id, i, successful_ops);
         
         bool success = tm_end(args->shared, tx);
         if (!success) {
+            // Transaction aborted and destroyed, retry with new transaction
             printf("[Thread %d] Very long transaction %d aborted, retrying\n", args->thread_id, i);
-            // Transaction aborted, rollback counter
-            args->counter_array[args->thread_id] -= 10;
+            // Rollback counter (testing atomicity)
+            args->counter_array[args->thread_id] -= 5;
             i--;
         } else {
             printf("[Thread %d] Very long transaction %d committed successfully\n", 
@@ -255,6 +420,33 @@ int main(void) {
     printf("✓ Size: %zu bytes\n", tm_size(shared));
     printf("✓ Alignment: %zu bytes\n\n", tm_align(shared));
     
+    // Initialize counters in shared memory
+    printf("Initializing shared memory counters...\n");
+    tx_t init_tx = tm_begin(shared, false);
+    if (init_tx == invalid_tx) {
+        fprintf(stderr, "Failed to begin initialization transaction\n");
+        tm_destroy(shared);
+        return 1;
+    }
+    
+    for (int i = 0; i < NUM_COUNTERS; i++) {
+        void* counter_addr = (char*)tm_start(shared) + i * sizeof(long);
+        long zero = 0;
+        if (!tm_write(shared, init_tx, &zero, sizeof(long), counter_addr)) {
+            fprintf(stderr, "Failed to initialize counter %d\n", i);
+            tm_end(shared, init_tx);
+            tm_destroy(shared);
+            return 1;
+        }
+    }
+    
+    if (!tm_end(shared, init_tx)) {
+        fprintf(stderr, "Failed to commit initialization transaction\n");
+        tm_destroy(shared);
+        return 1;
+    }
+    printf("✓ Initialized %d counters to 0\n\n", NUM_COUNTERS);
+    
     // Create counter array for threads
     long* counter_array = calloc(NUM_THREADS, sizeof(long));
     assert(counter_array != NULL);
@@ -264,8 +456,8 @@ int main(void) {
     thread_args_t args[NUM_THREADS];
     
     void* (*transaction_types[])(void*) = {
-        //short_ro_transaction,
-        //short_rw_transaction,
+        short_ro_transaction,
+        short_rw_transaction,
         long_alloc_transaction,
         mixed_transaction,
         very_long_transaction
@@ -304,6 +496,49 @@ int main(void) {
     }
     
     printf("\n=== All transactions completed ===\n\n");
+    
+    // Verify final state consistency
+    printf("Verifying final state consistency...\n");
+    tx_t verify_tx = tm_begin(shared, true);
+    if (verify_tx != invalid_tx) {
+        long final_counters[NUM_COUNTERS];
+        bool verification_ok = true;
+        long total_shared = 0;
+        
+        for (int i = 0; i < NUM_COUNTERS; i++) {
+            void* counter_addr = (char*)tm_start(shared) + i * sizeof(long);
+            if (!tm_read(shared, verify_tx, counter_addr, sizeof(long), &final_counters[i])) {
+                fprintf(stderr, "Failed to read counter %d during verification\n", i);
+                verification_ok = false;
+                break;
+            }
+            total_shared += final_counters[i];
+            
+            // Verify consistency: all counters should be non-negative
+            if (final_counters[i] < 0) {
+                fprintf(stderr, "✗ FATAL: Consistency violation: counter[%d] = %ld (negative)\n", 
+                        i, final_counters[i]);
+                fprintf(stderr, "Test failed - shutting down\n");
+                exit(1);
+            }
+        }
+        
+        tm_end(shared, verify_tx);
+        
+        if (verification_ok) {
+            printf("✓ All counters are non-negative (consistency maintained)\n");
+            printf("Shared memory counter values:\n");
+            for (int i = 0; i < NUM_COUNTERS; i++) {
+                printf("  Counter[%d]: %ld\n", i, final_counters[i]);
+            }
+            printf("Total shared counter sum: %ld\n", total_shared);
+        } else {
+            fprintf(stderr, "✗ Consistency verification failed\n");
+        }
+    } else {
+        fprintf(stderr, "Failed to begin verification transaction\n");
+    }
+    printf("\n");
     
     // Print statistics
     printf("Transaction statistics:\n");

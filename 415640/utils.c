@@ -3,6 +3,8 @@
 #include <params.h>
 #include <stdbool.h>
 #include <utils.h>
+#include <stdio.h>
+#include <dict.h>
 #include <tx_t.h>
 
 int nested_free_value_dict(void unused(*key), int unused(count), void* *value, void unused(*user)){
@@ -43,9 +45,11 @@ int lock_write_set(void *key, int unused(count), void* *unused(value), void *use
     
     if(!res_lock){
         ri->key = key;
+        printf("LOCK_WRITE_SET: failed lock on %p\n", lock);fflush(stdout);
+        return 1;
     }
-
-    return !res_lock;
+    printf("LOCK_WRITE_SET: locked %p\n", lock);fflush(stdout);
+    return 0;
 }
 
 // unlocks write set words until a match with the key in ri->key is found
@@ -60,18 +64,32 @@ int unlock_write_set_until(void *key, int unused(count), void* *unused(value), v
     return 0;
 }
 
-// valudates reading set, puts NULL n ri->key upon failure
+// in the ri the writing set is passed. all the keys that appear in the writing and reading set 
+// have to be transated to locks, checked for VERSION ONLY and subsiquently removed from reading set.
+// the keys appearing only in the reading set have to check both version and lock
 int validate_reading_set(void *key, int unused(count), void* *unused(value), void *user){
     region_and_index* ri = (region_and_index*)user;
-    
-    version_lock* lock = lock_get_from_pointer(ri->region, key);
-    int res_check = lock_check(lock, ((transaction_t*)ri->key)->read_version);
+    struct dictionary* ws = (struct dictionary*)ri->key;
 
-    if(!res_check){
-        ri->key = NULL;
+    bool res = false;
+
+    version_lock* lock = lock_get_from_pointer(ri->region, key);
+    if(dic_find(ws, key, 8)){
+        // key of rs is in ws, has already been locked
+        res = lock_check_version(lock, ri->transaction->read_version);
+
+    } else {
+        res = lock_check(lock, ri->transaction->read_version);
     }
 
-    return !res_check;
+    if (res == false){
+        printf("VALIDATE READING SET: failed on key:%p, res:%d, with lock at:%p with value:%d and rv:%d\n", key, res, lock, *lock, ri->transaction->read_version);fflush(stdout);
+        ri->transaction = NULL;
+        return 1;
+    }
+    printf("VALIDATE READING SET: ok on key:%p, res:%d, with lock:%d and rv:%d\n", key, res, *lock, ri->transaction->read_version);fflush(stdout);
+
+    return 0;
 }
 
 // write data in shared mem
@@ -89,7 +107,7 @@ int update_locks_writing_set(void *key, int unused(count), void* *unused(value),
     
     version_lock* lock = lock_get_from_pointer(ri->region, key);
     
-    lock_update_and_release(lock, ((transaction_t*)ri->key)->write_version);
+    lock_update_and_release(lock, ri->transaction->write_version);
 
     return 0;
 }
